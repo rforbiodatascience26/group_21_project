@@ -7,10 +7,28 @@ editor: visual
 #### Import packages
 
 ```{r}
-library(tidyverse)
+library("tidyverse")
+library("curl")
 ```
 
 #### Load data
+
+```{r}
+base_url <- "https://github.com/rforbiodatascience26/group_21_project/tree/main/data/_raw/"
+file_names <- c(
+  "77_cancer_proteomes_CPTAC_itraq.csv",
+  "clinical_data_breast_cancer.csv",
+  "PAM50_proteins.csv"
+)
+```
+
+```{r}
+multi_download(urls = str_c(base_url, file_names),
+               destfiles = str_c("../data/", file_names))
+```
+
+
+
 
 Don't know what text goes in what files.
 
