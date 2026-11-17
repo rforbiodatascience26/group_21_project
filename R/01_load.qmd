@@ -11,26 +11,35 @@ library("tidyverse")
 library("curl")
 ```
 
-#### Load the datasets
+#### Load data
 
 ```{r}
+# Download data
+curl_download(
+  url = "https://www.kaggle.com/api/v1/datasets/download/piotrgrabo/breastcancerproteomes",
+  destfile = "../data/_raw/breastcancerproteomes.zip",
+  mode = "wb"
+)
+
+# Unzip
+unzip("../data/_raw/breastcancerproteomes.zip",
+      exdir = "../data/_raw")
+
+# Remove ZIP archive
+invisible(file.remove("../data/_raw/breastcancerproteomes.zip"))
+```
+
+```{r, warning=FALSE}
+# Load datasets into environment
 file_names <- c(
   "77_cancer_proteomes_CPTAC_itraq.csv",
   "clinical_data_breast_cancer.csv",
   "PAM50_proteins.csv"
 )
 
-curl_download(url = "https://www.kaggle.com/api/v1/datasets/download/piotrgrabo/breastcancerproteomes",
-              destfile = "../data/raw_/breastcancerproteomes.zip")
-unzip("data/_raw/breastcancerproteomes.zip",
-      exdir = "data/_raw")
-file.remove("data/_raw/breastcancerproteomes.zip")
-```
-
-```{r, warning=FALSE}
-proteomes <- read_csv(file_names[1], show_col_types = FALSE)
-clinical  <- read_csv(file_names[2], show_col_types = FALSE)
-pam50     <- read_csv(file_names[3], show_col_types = FALSE)
+proteomes <- read_csv(str_c("../data/_raw/", file_names[1]), show_col_types = FALSE)
+clinical  <- read_csv(str_c("../data/_raw/", file_names[2]), show_col_types = FALSE)
+pam50     <- read_csv(str_c("../data/_raw/", file_names[3]), show_col_types = FALSE)
 ```
 
 ### Correlation between duplicates
@@ -91,12 +100,9 @@ proteomes_mean_without_control <- proteomes |>
               values_from = log2_ratio)
 ```
 
-
 ### Data
 
 ```{r}
 head(proteomes_mean_with_control)
 head(proteomes_mean_without_control)
 ```
-
-

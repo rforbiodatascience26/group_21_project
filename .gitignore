@@ -3,5 +3,6 @@
 .RData
 .Ruserdata
 
-# raw data
+# data folders
 data/_raw
+data
