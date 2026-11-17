@@ -4,5 +4,4 @@
 .Ruserdata
 
 # data folders
-data/_raw
-data
+data/
