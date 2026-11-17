@@ -1,9 +1,23 @@
 # group_21_project
 
-### Data retrieval
-Run 01_load.qmd to retrieve data.
+### Project Contributors
 
-Data is from https://www.kaggle.com/datasets/piotrgrabo/breastcancerproteomes/
+Student ID:  s264037  GitHub Username:  EmilSommerBennetzen2
+
+Student ID:  s206178  GitHub Username:  BerB
+
+Student ID:  s261697  GitHub Username:  mahuizg
+
+Student ID:  s261782  GitHub Username:  mathilde-picard
+
+Student ID:  s264038  GitHub Username:  tokiboggle
+
+
+
+### Data retrieval
+Data is automaticcaly retrieved when 01_load.qmd is run.
+
+Data is retrieved from https://www.kaggle.com/datasets/piotrgrabo/breastcancerproteomes/
 
 Associated paper:
 
