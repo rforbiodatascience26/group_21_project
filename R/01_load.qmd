@@ -6,7 +6,7 @@ editor: visual
 
 #### Import packages
 
-```{r}
+```{r, message=FALSE}
 library("tidyverse")
 library("curl")
 ```
@@ -22,11 +22,12 @@ file_names <- c(
 )
 ```
 
-```{r}
-proteomes <- read_csv(str_c("../data/", file_names[1]))
-clinical  <- read_csv(str_c("../data/", file_names[2]))
-pam50     <- read_csv(str_c("../data/", file_names[3]))
+```{r, warning=FALSE}
+proteomes <- read_csv(str_c(base_url, file_names[1]), show_col_types = FALSE)
+clinical  <- read_csv(str_c(base_url, file_names[2]), show_col_types = FALSE)
+pam50     <- read_csv(str_c(base_url, file_names[3]), show_col_types = FALSE)
 ```
 
-
-
+```{r}
+head(proteomes)
+```
