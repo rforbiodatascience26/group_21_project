@@ -63,7 +63,7 @@ dup_cor_matrices <- map(dup_patients, \(p) {
 dup_cor_matrices
 ```
 
-### Mean the duplicates and renameing
+### Mean the duplicates and renaming
 
 ```{r}
 proteomes_mean_with_control <- proteomes |>
@@ -103,9 +103,36 @@ proteomes_mean_without_control <- proteomes |>
               values_from = log2_ratio)
 ```
 
-### Data
+### Renaming columns before mergeing
+```{r}
+pam50 <- pam50 |> 
+  rename(RefSeq_accession_number = RefSeqProteinID)
+```
 
 ```{r}
-head(proteomes_mean_with_control)
-head(proteomes_mean_without_control)
+head(pam50)
 ```
+
+
+
+
+###Mergeing data
+#### Mergeing pam50 dataset with proteomes datasets
+
+```{r}
+# left joins to only keep the 100 reference genes for breast cancer
+proteomes_with_control_pam50_joined <-  inner_join(pam50,proteomes_mean_with_control, 
+                                                   by ="RefSeq_accession_number")
+
+proteomes_without_control_pam50_joined <- inner_join(pam50,proteomes_mean_without_control, 
+                                                      by = "RefSeq_accession_number")
+
+head(proteomes_with_control_pam50_joined)
+head(proteomes_without_control_pam50_joined)
+```
+
+
+
+
+
+### next up join with clinical data. Maybe swtich the other merge before handling duplicates to lower run time???
