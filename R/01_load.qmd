@@ -1,4 +1,36 @@
 ---
 title: "01_load"
 format: html
+editor: visual
 ---
+
+#### Import packages
+
+```{r}
+library(tidyverse)
+```
+
+#### Load data
+
+Don't know what text goes in what files.
+
+The data is made up of three files:
+
+```{r}
+proteomes <- read.csv("../data/_raw/77_cancer_proteomes_CPTAC_itraq.csv")
+head(proteomes)
+```
+
+proteomes contains ....
+
+```{r}
+clinical <- read.csv("../data/_raw/clinical_data_breast_cancer.csv")
+head(clinical)
+```
+
+Clinical contains .......
+
+```{r}
+PAM50 <- read.csv("../data/_raw/PAM50_proteins.csv")
+head(PAM50)
+```
