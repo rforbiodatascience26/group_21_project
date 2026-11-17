@@ -14,6 +14,9 @@ library("curl")
 #### Load data
 
 ```{r}
+# Create data folders
+dir.create("../data/_raw", recursive = TRUE, showWarnings = FALSE)
+
 # Download data
 curl_download(
   url = "https://www.kaggle.com/api/v1/datasets/download/piotrgrabo/breastcancerproteomes",
