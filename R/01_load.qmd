@@ -50,14 +50,7 @@ dup_cor_matrices <- map(dup_patients, \(p) {
 
 dup_cor_matrices
 ```
-<<<<<<< HEAD
 
-#### Save to 01_load.csv
-
-```{r}
-write.csv()
-```
-=======
 ### Mean the duplicates and renameing
 
 ```{r}
@@ -107,7 +100,3 @@ head(proteomes_mean_without_control)
 ```
 
 
-
-
-
->>>>>>> f69aab70d412b50c0decbb906ecf130aec227afb
