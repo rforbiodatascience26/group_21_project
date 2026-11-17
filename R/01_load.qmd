@@ -11,10 +11,10 @@ library("tidyverse")
 library("curl")
 ```
 
-#### Load data
+#### Load the datasets
 
 ```{r}
-base_url <- "https://github.com/rforbiodatascience26/group_21_project/tree/main/data/_raw/"
+base_url <- "https://github.com/rforbiodatascience26/group_21_project/raw/main/data/_raw/"
 file_names <- c(
   "77_cancer_proteomes_CPTAC_itraq.csv",
   "clinical_data_breast_cancer.csv",
@@ -23,32 +23,10 @@ file_names <- c(
 ```
 
 ```{r}
-multi_download(urls = str_c(base_url, file_names),
-               destfiles = str_c("../data/", file_names))
+proteomes <- read_csv(str_c("../data/", file_names[1]))
+clinical  <- read_csv(str_c("../data/", file_names[2]))
+pam50     <- read_csv(str_c("../data/", file_names[3]))
 ```
 
 
 
-
-Don't know what text goes in what files.
-
-The data is made up of three files:
-
-```{r}
-proteomes <- read.csv("../data/_raw/77_cancer_proteomes_CPTAC_itraq.csv")
-head(proteomes)
-```
-
-proteomes contains ....
-
-```{r}
-clinical <- read.csv("../data/_raw/clinical_data_breast_cancer.csv")
-head(clinical)
-```
-
-Clinical contains .......
-
-```{r}
-PAM50 <- read.csv("../data/_raw/PAM50_proteins.csv")
-head(PAM50)
-```
