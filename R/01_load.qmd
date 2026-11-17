@@ -33,12 +33,79 @@ clinical  <- read_csv(file_names[2], show_col_types = FALSE)
 pam50     <- read_csv(file_names[3], show_col_types = FALSE)
 ```
 
+### Correlation between duplicates
+
 ```{r}
-head(proteomes)
+sample_cols  <- str_subset(names(proteomes), "TCGA")
+patients     <- str_split_i(sample_cols, "[_|.]", 1)
+dup_patients <- unique(patients[duplicated(patients)])
+
+dup_cor_matrices <- map(dup_patients, \(p) {
+  proteomes |>
+    select(all_of(sample_cols[patients == p])) |>
+    cor(use = "pairwise.complete.obs") |>
+    round(3)
+}) |>
+  set_names(dup_patients)
+
+dup_cor_matrices
 ```
+<<<<<<< HEAD
 
 #### Save to 01_load.csv
 
 ```{r}
 write.csv()
 ```
+=======
+### Mean the duplicates and renameing
+```{r}
+proteomes_mean_with_control <- proteomes |>
+  # 1. Long format: all sample columns (everything except the 3 annotation columns)
+  pivot_longer(cols = -c(RefSeq_accession_number, gene_symbol, gene_name),
+               names_to = "sample",
+               values_to = "log2_ratio") |>
+  # 2. Patient ID: tumors get TCGA-AO-A12D format, controls keep their own name
+  mutate(patient_id = if_else(str_detect(sample, "TCGA"),
+                              str_c("TCGA-", str_split_i(sample, "[_|.]", 1)),
+                              sample)) |>
+  # 3. Mean per protein and patient (only the replicates actually change)
+  group_by(RefSeq_accession_number, gene_symbol, gene_name, patient_id) |>
+  summarise(log2_ratio = mean(log2_ratio, na.rm = TRUE), .groups = "drop") |>
+  # 4. NaN (both copies missing) -> NA
+  mutate(log2_ratio = if_else(is.nan(log2_ratio), NA_real_, log2_ratio)) |>
+  # 5. Back to wide format
+  pivot_wider(names_from = patient_id,
+              values_from = log2_ratio)
+```
+
+```{r}
+proteomes_mean_without_control <- proteomes |>
+  # 1. Long format: one row per protein and sample
+  pivot_longer(cols = contains("TCGA"),
+               names_to = "sample",
+               values_to = "log2_ratio") |>
+  # 2. Patient ID from the sample name: AO-A12D.01TCGA -> TCGA-AO-A12D
+  mutate(patient_id = str_c("TCGA-", str_split_i(sample, "[_|.]", 1))) |>
+  # 3. Mean per protein and patient (replicates are averaged, others are unchanged)
+  group_by(RefSeq_accession_number, gene_symbol, gene_name, patient_id) |>
+  summarise(log2_ratio = mean(log2_ratio, na.rm = TRUE), .groups = "drop") |>
+  # 4. If both copies are missing, mean() gives NaN; make it a normal NA
+  mutate(log2_ratio = if_else(is.nan(log2_ratio), NA_real_, log2_ratio)) |>
+  # 5. Back to wide format: one column per patient
+  pivot_wider(names_from = patient_id,
+              values_from = log2_ratio)
+```
+
+
+### Data
+```{r}
+head(proteomes_mean_with_control)
+head(proteomes_mean_without_control)
+```
+
+
+
+
+
+>>>>>>> f69aab70d412b50c0decbb906ecf130aec227afb
