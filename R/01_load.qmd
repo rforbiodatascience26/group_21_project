@@ -59,6 +59,7 @@ write.csv()
 ```
 =======
 ### Mean the duplicates and renameing
+
 ```{r}
 proteomes_mean_with_control <- proteomes |>
   # 1. Long format: all sample columns (everything except the 3 annotation columns)
@@ -99,6 +100,7 @@ proteomes_mean_without_control <- proteomes |>
 
 
 ### Data
+
 ```{r}
 head(proteomes_mean_with_control)
 head(proteomes_mean_without_control)
