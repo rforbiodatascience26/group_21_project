@@ -6,12 +6,16 @@ editor: visual
 
 #### Import packages
 
+Import the different libraries we will need.
+
 ```{r, message=FALSE}
 library("tidyverse")
 library("curl")
 ```
 
 #### Load data
+
+Import the data from Kaggle ("https://www.kaggle.com/datasets/piotrgrabo/breastcancerproteomes?select=77_cancer_proteomes_CPTAC_itraq.csv")
 
 ```{r}
 # Create data folders
@@ -47,6 +51,8 @@ pam50     <- read_csv(str_c("../data/_raw/", file_names[3]), show_col_types = FA
 
 ### Correlation between duplicates
 
+First we check the correlation between duplicated to be sure that that duplicates from the same patient are consistent. 
+
 ```{r}
 sample_cols  <- str_subset(names(proteomes), "TCGA")
 patients     <- str_split_i(sample_cols, "[_|.]", 1)
@@ -64,6 +70,12 @@ dup_cor_matrices
 ```
 
 ### Mean the duplicates and renaming
+
+Then we merge those duplicated so that each patient has only one measurement. 
+Consequently, patients having more than one sample will have a single value per protein (equal to the average of their replicates).
+Two versions of the dataset are created:
+- including the healthy control samples
+- only with tumor samples
 
 ```{r}
 proteomes_mean_with_control <- proteomes |>
@@ -103,21 +115,27 @@ proteomes_mean_without_control <- proteomes |>
               values_from = log2_ratio)
 ```
 
-### Renaming columns before mergeing
+### Renaming columns of the PAM50 file before mergeing
+
+Look at the pam50 dataset
+
+```{r}
+head(pam50)
+```
+Before filtering the proteomic dataset with the PAM50 reference list, we rename RefSeqProteinID to RefSeq_accession_number in the pam50 table so that both of the dataset have the same key column name for joining. 
+
 ```{r}
 pam50 <- pam50 |> 
   rename(RefSeq_accession_number = RefSeqProteinID)
 ```
 
-```{r}
-head(pam50)
-```
 
+### Merge data
 
+#### Merge the PAM50 dataset with the proteomes dataset
 
-
-###Mergeing data
-#### Mergeing pam50 dataset with proteomes datasets
+The PAM50 dataset contains the relevant proteins to study for the different subtypes of breast cancer. Consequently, we merge those two dataset to keep only the relevant proteins in our study.
+Merging at the time of the study is interesting because the results will be much sharper and easier to interpret.
 
 ```{r}
 # left joins to only keep the 100 reference genes for breast cancer
@@ -131,8 +149,56 @@ head(proteomes_with_control_pam50_joined)
 head(proteomes_without_control_pam50_joined)
 ```
 
+This first step merged the two tables according to the RefSeq_accession_number column. 
 
+### Merge the filtered proteomes dataset with the clinical dataset
 
+Here is a visualization of the clinical metadata
 
+```{r}
+head(clinical)
+```
+Before merging those two tables, we need to be sure that they share a common structure and that patients ID match. 
 
+First, we need to pivot the proteomes dataset so patients will be on rows as for the clinical table and unique protein isoforms on columns.
+Use the proteomes without control because we are only interested into tumors and not the healthy data. 
+
+```{r}
+proteomes_transposed <- proteomes_without_control_pam50_joined |> 
+  # create an unique ID for each isoform 
+  mutate(protein_id = str_c(gene_symbol, "_", RefSeq_accession_number)) |> 
+  # keep only the new ID and patients columns 
+  select(protein_id, starts_with("TCGA")) |>  
+  # put each patient on one row 
+  pivot_longer(
+    # take all the columns from the patients (= everything but proteins_id)
+    cols = -protein_id, 
+    names_to = "patient_id",
+    # log 
+    values_to = "log2_ratio"
+  ) |> 
+  # put each unique protein as an unique column  
+  pivot_wider(
+    names_from = protein_id,
+    values_from = log2_ratio
+  )
+
+head(proteomes_transposed)
+```
+We went from proteome filtered datset where patients are in columns and lines are proteins.
+We took all the columns of the patients and tranformed it in lines containing each patient + protein + value associated (pivot_longer step).
+And after take all the proteins and spread them into columns (pivot_wider step).
+=> the same structure than the clinical table.  
+
+Now, the objective is to merge the clinical metadata to add relevant informations to the filtered proteomes dataset.
+
+```{r}
+
+final_dataset <- inner_join(proteosomes_transposed, clinical, 
+                            by = c("Compete TCGA ID" = "patient_id")
+)
+
+head(final_dataset)
+```
 ### next up join with clinical data. Maybe swtich the other merge before handling duplicates to lower run time???
+
