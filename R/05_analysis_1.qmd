@@ -4,4 +4,65 @@ format: html
 editor: visual
 ---
 
-## Quarto
+## Analysis
+
+```{r}
+library("tidyverse")
+```
+
+Right now we don't have the "clean clean" data per se so the dfollowing is a sort of template assuming long format for the data which is why we pivot to wide format. **This may be removed after the data wrangling/cleaning is done, but for now, I'll leave it in case we need it.**
+
+```{r}
+pca_wide <- data |> 
+  select(patient_id, subtype, RefSeq_accession_number, log2_ratio) |> 
+  drop_na(subtype) |> 
+  select(where(\(x) !any(is.na(x)))) #This is to keep only proteins without NAs
+```
+
+Using the GeeksForGeeks PCA tutorial listed in the references, we carry out PCA with centering, scaling, and retx.
+
+```{r}
+pca_res <- pca_wide |> 
+  select(-patient_id, -subtype) |> 
+  prcomp(scale.=TRUE, center=TRUE, retx=TRUE)
+
+names(pca_res)
+```
+
+The following two chunks of code will help us observe how much variance is captured by each of the PCs. Then, we will also observe the PC loadings for a couple of proteins.
+
+```{r}
+summary(pca_res)
+```
+
+```{r}
+pca_res$rotation[1:5, 1:4] #This is for the first 5 proteins and first 4 PCs. 
+head(pca_res$x)
+```
+
+Now, we are creating a biplot to observe the direction and the overall contribution of the variables in the PCs.
+
+```{r}
+biplot(pca_res, main="Biplot of the Principal Components", scale=0)
+```
+
+Finally, we are making a scatterplot colored by subtype to help us answer the project question do tumors belonging to the same subtype share proteins? If the subtypes properly separate, then we could argue that proteins seem to distinguish the subtypes; whereas if they're al scattered, then the proteins aren't enough to do so. Also, the groups that are placed closer to one another will have similar profiles.
+
+```{r}
+pca_scores <- pca_res |> 
+  as_tibble() |> 
+  bind_cols(pca_wide |> 
+              select(patien_id, subtype))
+
+pca_scores |> 
+  ggplot(aes(x=PC1, y=PC2, color = subtype)) +
+  geom_point(size=3, alpha=0.8) +
+  labs(x = str_c("PC1(", round(propve[1]*100, 1), "%)"),
+       y = str_c("PC2(", round(propve[2]*100 , 1), "%)"),
+       colour ="PAM50 subtype")+
+  theme_minimal()
+```
+
+#### References:
+
+- GeeksForGeeks. (2026). *Principal Component Analysis with R Programming.* Retrieved from: <https://www.geeksforgeeks.org/r-language/principal-component-analysis-with-r-programming/>
