@@ -164,7 +164,7 @@ First, we need to pivot the proteomes dataset so patients will be on rows as for
 Use the proteomes without control because we are only interested into tumors and not the healthy data. 
 
 ```{r}
-proteomes_transposed <- proteomes_without_control_pam50_joined |> 
+proteomes_without_control_transposed <- proteomes_without_control_pam50_joined |> 
   # create an unique ID for each isoform 
   mutate(protein_id = str_c(gene_symbol, "_", RefSeq_accession_number)) |> 
   # keep only the new ID and patients columns 
@@ -183,7 +183,7 @@ proteomes_transposed <- proteomes_without_control_pam50_joined |>
     values_from = log2_ratio
   )
 
-head(proteomes_transposed)
+head(proteomes_without_control_transposed)
 ```
 We went from proteome filtered datset where patients are in columns and lines are proteins.
 We took all the columns of the patients and tranformed it in lines containing each patient + protein + value associated (pivot_longer step).
@@ -193,12 +193,47 @@ And after take all the proteins and spread them into columns (pivot_wider step).
 Now, the objective is to merge the clinical metadata to add relevant informations to the filtered proteomes dataset.
 
 ```{r}
-
-final_dataset <- inner_join(proteosomes_transposed, clinical, 
-                            by = c("Compete TCGA ID" = "patient_id")
+final_without_control_dataset <- inner_join(proteomes_without_control_transposed, clinical, 
+                            by = c("patient_id" = "Complete TCGA ID")
 )
 
-head(final_dataset)
+View(final_without_control_dataset)
 ```
-### next up join with clinical data. Maybe swtich the other merge before handling duplicates to lower run time???
+
+
+```{r}
+proteomes_with_control_transposed <- proteomes_with_control_pam50_joined |> 
+  # create an unique ID for each isoform 
+  mutate(protein_id = str_c(gene_symbol, "_", RefSeq_accession_number)) |> 
+  # keep only the new ID and patients columns 
+  select(protein_id, ends_with("CPTAC") | starts_with("TCGA")) |> 
+  # put each patient on one row 
+  pivot_longer(
+    # take all the columns from the patients (= everything but proteins_id)
+    cols = -protein_id, 
+    names_to = "patient_id",
+    # log 
+    values_to = "log2_ratio"
+  ) |> 
+  # put each unique protein as an unique column  
+  pivot_wider(
+    names_from = protein_id,
+    values_from = log2_ratio
+  )
+
+head(proteomes_with_control_transposed)
+```
+
+```{r}
+final_with_control_dataset <- left_join(
+  proteomes_with_control_transposed, 
+  clinical, 
+  by = c("patient_id" = "Complete TCGA ID")
+)
+
+View(final_with_control_dataset)
+```
+
+
+
 
