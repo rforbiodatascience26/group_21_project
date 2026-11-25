@@ -4,7 +4,13 @@ format: html
 editor: visual
 ---
 
-## Loading output data from 01_clean
+## Load packages
+
+```{r}
+library(tidyverse)
+```
+
+## Loading output data from 02_clean
 
 ```{r, warning=FALSE}
 # Load datasets into environment
@@ -31,12 +37,8 @@ augment_all_genes <- clean_all_genes |>
 
 ```{r}
 data_path = "../data/"
-write_tsv(x = augment_pam50_filtered, 
+write_tsv(augment_pam50_filtered, 
           file = str_c(data_path, "02_dat_augment_pam50_filtered.tsv"))
-```
-
-```{r}
-data_path = "../data/"
-write_tsv(x = augment_all_genes, 
+write_tsv(augment_all_genes, 
           file = str_c(data_path, "02_dat_augment_all_genes.tsv"))
 ```

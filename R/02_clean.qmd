@@ -4,6 +4,12 @@ format: html
 editor: visual
 ---
 
+## Load packages
+
+```{r}
+library(tidyverse)
+```
+
 ## Loading output data from 01_load
 
 ```{r, warning=FALSE}
@@ -42,12 +48,8 @@ head(all_genes_without_NA)
 
 ```{r}
 data_path = "../data/"
-write_tsv(x = pam50_filtered_without_NA, 
+write_tsv(pam50_filtered_without_NA, 
           file = str_c(data_path, "02_dat_clean_pam50_filtered_without_NA.tsv"))
-```
-
-```{r}
-data_path = "../data/"
-write_tsv(x = all_genes_without_NA, 
+write_tsv(all_genes_without_NA, 
           file = str_c(data_path, "02_dat_clean_all_genes_without_NA.tsv"))
 ```
