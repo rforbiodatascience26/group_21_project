@@ -226,21 +226,18 @@ View(final_without_control_dataset)
 
 ```{r}
 proteomes_with_control_transposed <- proteomes_with_control_pam50_joined |> 
-  # create an unique ID for each isoform 
-  mutate(protein_id = str_c(gene_symbol, "_", RefSeq_accession_number)) |> 
-  # keep only the new ID and patients columns 
-  select(protein_id, ends_with("CPTAC") | starts_with("TCGA")) |> 
+  select(RefSeq_accession_number, ends_with("CPTAC") | starts_with("TCGA")) |> 
   # put each patient on one row 
   pivot_longer(
     # take all the columns from the patients (= everything but proteins_id)
-    cols = -protein_id, 
+    cols = -RefSeq_accession_number, 
     names_to = "patient_id",
     # log 
     values_to = "log2_ratio"
   ) |> 
   # put each unique protein as an unique column  
   pivot_wider(
-    names_from = protein_id,
+    names_from = RefSeq_accession_number,
     values_from = log2_ratio
   )
 
@@ -248,19 +245,25 @@ head(proteomes_with_control_transposed)
 ```
 
 ```{r}
-final_with_control_dataset <- left_join(
+final_with_control_dataset_pam50_filtered <- left_join(
   proteomes_with_control_transposed, 
   clinical, 
   by = c("patient_id" = "Complete TCGA ID")
 )
 
-View(final_with_control_dataset)
+View(final_with_control_dataset_pam50_filtered )
 ```
 
-Write the final datasets as tsv files in the data folder
+### Write the final dataframes as tsv files in the data folder
 
 ```{r}
 data_path = "../data/"
-write_tsv(x = final_with_control_dataset, 
-          file = str_c(data_path, "01_dat_load_final_with_control.tsv"))
+write_tsv(x = final_with_control_dataset_pam50_filtered, 
+          file = str_c(data_path, "01_dat_load_final_with_control_pam50_filtered.tsv"))
+```
+
+```{r}
+data_path = "../data/"
+write_tsv(x = final_with_control_dataset_all_genes, 
+          file = str_c(data_path, "01_dat_load_final_with_control_dataset_all_genes.tsv"))
 ```
