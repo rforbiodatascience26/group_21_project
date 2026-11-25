@@ -10,6 +10,16 @@ editor: visual
 library(tidyverse)
 ```
 
+```{r, warning=FALSE}
+# Load datasets into environment
+data_path <- "../data/"
+
+augment_pam50_filtered <- read_tsv(str_c(data_path, "03_dat_augment_pam50_filtered.tsv"), 
+                                 show_col_types = FALSE)
+augment_all_genes  <- read_tsv(str_c(data_path, "03_dat_augment_all_genes.tsv"), 
+                             show_col_types = FALSE)
+```
+
 ### Descriptive statistics
 
 *\*\*Most of this should probably be deleted, and just used for the presentation. We should likely restrict this file to just describe the fully cleaned+augmented/analysis ready data.*
