@@ -38,15 +38,15 @@ invisible(file.remove("../data/_raw/breastcancerproteomes.zip"))
 
 ```{r, warning=FALSE}
 # Load datasets into environment
-file_names <- c(
-  "77_cancer_proteomes_CPTAC_itraq.csv",
-  "clinical_data_breast_cancer.csv",
-  "PAM50_proteins.csv"
-)
-
-proteomes <- read_csv(str_c("../data/_raw/", file_names[1]), show_col_types = FALSE)
-clinical  <- read_csv(str_c("../data/_raw/", file_names[2]), show_col_types = FALSE)
-pam50     <- read_csv(str_c("../data/_raw/", file_names[3]), show_col_types = FALSE)
+proteomes <- read_csv(str_c("../data/_raw/",
+                            "77_cancer_proteomes_CPTAC_itraq.csv"), 
+                      show_col_types = FALSE)
+clinical <- read_csv(str_c("../data/_raw/",
+                           "clinical_data_breast_cancer.csv"),
+                     show_col_types = FALSE)
+pam50 <- read_csv(str_c("../data/_raw/",
+                        "PAM50_proteins.csv"),
+                  show_col_types = FALSE)
 ```
 
 ### Duplicate samples
@@ -54,47 +54,56 @@ pam50     <- read_csv(str_c("../data/_raw/", file_names[3]), show_col_types = FA
 For three of the patients, duplicate samples were collected. First we check the correlation between duplicate samples to be sure that duplicates from the same patient are consistent.
 
 ```{r}
-# set up variables
-sample_cols  <- str_subset(names(proteomes), "TCGA")
-patients     <- str_split_i(sample_cols, "[_.]", 1)
-dup_patients <- unique(patients[duplicated(patients)])
+# Set up variables
+sample_cols <- proteomes |> 
+  select(contains("TCGA")) |> 
+  names()
+patients <- str_split_i(sample_cols, "[_.]", 1)
+dup_patients <- tibble(patient = patients) |> 
+  count(patient) |> 
+  filter(n > 1) |> 
+  pull(patient)
 
-# compute correlation matrices for duplicate samples
-dup_cor_matrices <- map(dup_patients, function(p) {
-  proteomes |>
-    select(all_of(sample_cols[patients == p])) |>
-    cor(use = "pairwise.complete.obs") |>
-    round(3)
-}) |>
-  set_names(dup_patients)
+# Compute correlation matrices for duplicate samples
+dup_cor_matrices <- dup_patients |> 
+  set_names() |> 
+  map(function(p) {
+    proteomes |>
+      select(starts_with(p)) |> 
+      cor(use = "pairwise.complete.obs") |> 
+      round(3)
+  })
 
 dup_cor_matrices
 ```
 
 #### Mean duplicate protein expression levels
 
-Seeing as the three duplicate measurements correlate well, we merge the duplicates so that each patient has only one measurement. Consequently, patients having more than one sample will have a single value per protein (the average of their replicates).
+We merge the duplicates so that each patient has only one measured protein expression level pr. protein. We do this by taking the mean between the two duplicate samples, seeing as the three duplicates correlate well.
 
 ```{r}
 proteomes_dupmean <- proteomes |>
-  # 1. long format only protein expression cols
+  # 1. Long format only protein expression cols
   pivot_longer(cols = -c(RefSeq_accession_number, gene_symbol, gene_name),
                names_to = "sample",
                values_to = "log2_ratio") |>
   
-  # 2. patient ID: tumors get TCGA-AO-A12D format, controls keep their own name
+  # 2. Patient ID: tumors get TCGA-AO.A12D format, controls keep their own name
   mutate(patient_id = if_else(str_detect(sample, "TCGA"),
-                              str_c("TCGA-", str_split_i(sample, "[_.]", 1)),
+                              str_c("TCGA-",
+                                    str_split_i(sample, "[_.]", 1)),
                               sample)) |>
   
-  # 3. mean per protein and patient (only the replicates actually change)
+  # 3. Mean per protein and patient (only the replicates actually change)
   group_by(RefSeq_accession_number, patient_id) |>
-  summarise(log2_ratio = mean(log2_ratio, na.rm = TRUE), .groups = "drop") |>
+  summarise(log2_ratio = mean(log2_ratio,
+                              na.rm = TRUE),
+            .groups = "drop") |>
   
-  # 4. turn NaN's into true NA's
+  # 4. Turn NaN's from mean() into true NA's
   mutate(log2_ratio = if_else(is.nan(log2_ratio), NA_real_, log2_ratio)) |>
   
-  # 5. back to wide format
+  # 5. Back to wide format
   pivot_wider(names_from = patient_id,
               values_from = log2_ratio)
 ```
@@ -118,7 +127,7 @@ pam50 <- pam50 |>
 
 #### Proteomes for only PAM50 genes
 
-The PAM50 dataset contains genes, whose mRNA expression signatures can be used to classify breast cancer into 5 different subtypes. To compare classification by mRNA expression vs protein expression for these genes, we merge these two datasets, keeping only the expression profiles of PAM50 proteins for our study.
+The PAM50 dataset contains genes, whose mRNA expression signatures can be used to classify breast cancer into 5 different subtypes. To compare classification by mRNA expression (assigned labels in clinical data) vs protein expression for these genes, we merge these two datasets, keeping only the expression profiles of PAM50 proteins for our study.
 
 ```{r}
 # left joins to only keep the 100 reference genes for breast cancer
