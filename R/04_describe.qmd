@@ -4,4 +4,78 @@ format: html
 editor: visual
 ---
 
-## Quarto
+### Load packages
+
+```{r}
+library(tidyverse)
+```
+
+### Descriptive statistics
+
+*\*\*Most of this should probably be deleted, and just used for the presentation. We should likely restrict this file to just describe the fully cleaned+augmented/analysis ready data.*
+
+#### The raw data
+
+The data consists of protein expression levels for 77 patients (+ 3 duplicates) with breast cancer, as well as 3 control samples, measured by iTRAQ MS/MS. The proteome data is accompanied by clinical data about PAM50 classified cancer subtype, survivabillity, etc.
+
+```{r}
+head(proteomes)
+```
+
+```{r}
+head(clinical)
+```
+
+A separate dataset contains the PAM50 genes used for classification of breast cancer subtypes from mRNA expression levels. The genes are annotated on isoform level, adding up to 100 unique PAM50 gene isoforms:
+
+```{r}
+head(pam50)
+```
+
+#### Cleaning
+
+3 duplicate pairs we're found to have strong correlation between protein expression levels. We therefore combined them by taking the mean of each protein expression level, bringing us down to 80 total samples.
+
+Before cleaning there was an average of 11238.78 proteins pr. sample
+
+```{r}
+# pivot longer
+proteomes_long <- proteomes |> 
+  pivot_longer(
+    cols = !c(RefSeq_accession_number, gene_symbol, gene_name),
+    names_to = "sample_id",
+    values_to = "expression_counts"
+  )
+
+# count non-NA proteins per sample
+protein_counts <- proteomes_long |>
+  group_by(sample_id) |>
+  summarise(
+    n_proteins = sum(!is.na(expression_counts)),
+    .groups = "drop"
+  )
+
+
+# Average proteins pr. sample
+protein_counts |> 
+  select(n_proteins) |> 
+  summarise(avg = mean(n_proteins))
+```
+
+```{r}
+# density plot
+ggplot(protein_counts, aes(x = n_proteins)) +
+  geom_density(fill = "blue", alpha = 0.4) +
+  labs(
+    x = "Number of proteins quantified",
+    y = "Density",
+    title = "Proteins measured per sample"
+  ) +
+  theme_minimal()
+```
+
+Filtering proteins for NA's in expression level, XX proteins were discarded. The final number of proteins in the data is XX
+
+```{r}
+head()
+```
