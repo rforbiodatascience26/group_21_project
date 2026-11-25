@@ -4,4 +4,50 @@ format: html
 editor: visual
 ---
 
-## 
+## Loading output data from 01_load
+
+```{r, warning=FALSE}
+# Load datasets into environment
+file_names <- c(
+  "01_dat_load_final_with_control_pam50_filtered.tsv",
+  "01_dat_load_final_with_control_dataset_all_genes.tsv")
+
+pam50_filtered <- read_tsv(str_c("../data/", file_names[1]), show_col_types = FALSE)
+all_genes  <- read_tsv(str_c("../data/", file_names[2]), show_col_types = FALSE)
+```
+
+### Removing all NA values from the PAM50 filtered data
+
+```{r}
+pam50_filtered_without_NA <- pam50_filtered |> 
+  select(-(where(anyNA) & !starts_with("PAM50")))
+```
+
+```{r}
+head(pam50_filtered_without_NA)
+```
+
+### Removing all NA values from the all genes data
+
+```{r}
+all_genes_without_NA <- all_genes |> 
+  select(-(where(anyNA) & !starts_with("PAM50")))
+```
+
+```{r}
+head(all_genes_without_NA)
+```
+
+### Save the final tibbles as tsv files in the data folder
+
+```{r}
+data_path = "../data/"
+write_tsv(x = pam50_filtered_without_NA, 
+          file = str_c(data_path, "02_dat_clean_pam50_filtered_without_NA.tsv"))
+```
+
+```{r}
+data_path = "../data/"
+write_tsv(x = all_genes_without_NA, 
+          file = str_c(data_path, "02_dat_clean_all_genes_without_NA.tsv"))
+```
