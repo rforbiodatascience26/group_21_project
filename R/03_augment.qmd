@@ -4,4 +4,39 @@ format: html
 editor: visual
 ---
 
-## Quarto
+## Loading output data from 01_clean
+
+```{r, warning=FALSE}
+# Load datasets into environment
+file_names <- c(
+  "02_dat_clean_pam50_filtered_without_NA.tsv",
+  "02_dat_clean_all_genes_without_NA.tsv")
+
+clean_pam50_filtered <- read_tsv(str_c("../data/", file_names[1]), show_col_types = FALSE)
+clean_all_genes  <- read_tsv(str_c("../data/", file_names[2]), show_col_types = FALSE)
+```
+
+## Create the breast cancer subtype label for the controls
+
+```{r}
+#Replace the NA values with control
+augment_pam50_filtered <- clean_pam50_filtered |> 
+  mutate("PAM50 mRNA" = replace_na(clean_pam50_filtered[["PAM50 mRNA"]], "control"))
+
+augment_all_genes <- clean_all_genes |> 
+  mutate("PAM50 mRNA" = replace_na(clean_all_genes[["PAM50 mRNA"]], "control"))
+```
+
+### Save the final tibbles as tsv files in the data folder
+
+```{r}
+data_path = "../data/"
+write_tsv(x = augment_pam50_filtered, 
+          file = str_c(data_path, "02_dat_augment_pam50_filtered.tsv"))
+```
+
+```{r}
+data_path = "../data/"
+write_tsv(x = augment_all_genes, 
+          file = str_c(data_path, "02_dat_augment_all_genes.tsv"))
+```
