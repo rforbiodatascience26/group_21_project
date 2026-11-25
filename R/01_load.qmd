@@ -38,88 +38,85 @@ invisible(file.remove("../data/_raw/breastcancerproteomes.zip"))
 
 ```{r, warning=FALSE}
 # Load datasets into environment
-file_names <- c(
-  "77_cancer_proteomes_CPTAC_itraq.csv",
-  "clinical_data_breast_cancer.csv",
-  "PAM50_proteins.csv"
-)
-
-proteomes <- read_csv(str_c("../data/_raw/", file_names[1]), show_col_types = FALSE)
-clinical  <- read_csv(str_c("../data/_raw/", file_names[2]), show_col_types = FALSE)
-pam50     <- read_csv(str_c("../data/_raw/", file_names[3]), show_col_types = FALSE)
+proteomes <- read_csv(str_c("../data/_raw/",
+                            "77_cancer_proteomes_CPTAC_itraq.csv"), 
+                      show_col_types = FALSE)
+clinical <- read_csv(str_c("../data/_raw/",
+                           "clinical_data_breast_cancer.csv"),
+                     show_col_types = FALSE)
+pam50 <- read_csv(str_c("../data/_raw/",
+                        "PAM50_proteins.csv"),
+                  show_col_types = FALSE)
 ```
 
-### Correlation between duplicates
+### Duplicate samples
 
-First we check the correlation between duplicated to be sure that that duplicates from the same patient are consistent.
+For three of the patients, duplicate samples were collected. First we check the correlation between duplicate samples to be sure that duplicates from the same patient are consistent.
 
 ```{r}
-sample_cols  <- str_subset(names(proteomes), "TCGA")
-patients     <- str_split_i(sample_cols, "[_|.]", 1)
-dup_patients <- unique(patients[duplicated(patients)])
+# Set up variables
+sample_cols <- proteomes |> 
+  select(contains("TCGA")) |> 
+  names()
+patients <- str_split_i(sample_cols, "[_.]", 1)
+dup_patients <- tibble(patient = patients) |> 
+  count(patient) |> 
+  filter(n > 1) |> 
+  pull(patient)
 
-dup_cor_matrices <- map(dup_patients, \(p) {
-  proteomes |>
-    select(all_of(sample_cols[patients == p])) |>
-    cor(use = "pairwise.complete.obs") |>
-    round(3)
-}) |>
-  set_names(dup_patients)
+# Compute correlation matrices for duplicate samples
+dup_cor_matrices <- dup_patients |> 
+  set_names() |> 
+  map(function(p) {
+    proteomes |>
+      select(starts_with(p)) |> 
+      cor(use = "pairwise.complete.obs") |> 
+      round(3)
+  })
 
 dup_cor_matrices
 ```
 
-### Mean the duplicates and renaming
+#### Mean duplicate protein expression levels
 
-Then we merge those duplicated so that each patient has only one measurement. Consequently, patients having more than one sample will have a single value per protein (equal to the average of their replicates). Two versions of the dataset are created: - including the healthy control samples - only with tumor samples
+We merge the duplicates so that each patient has only one measured protein expression level pr. protein. We do this by taking the mean between the two duplicate samples, seeing as the three duplicates correlate well.
 
 ```{r}
-proteomes_mean_with_control <- proteomes |>
-  # 1. Long format: all sample columns (everything except the 3 annotation columns)
+proteomes_dupmean <- proteomes |>
+  # 1. Long format only protein expression cols
   pivot_longer(cols = -c(RefSeq_accession_number, gene_symbol, gene_name),
                names_to = "sample",
                values_to = "log2_ratio") |>
-  # 2. Patient ID: tumors get TCGA-AO-A12D format, controls keep their own name
+  
+  # 2. Patient ID: tumors get TCGA-AO.A12D format, controls keep their own name
   mutate(patient_id = if_else(str_detect(sample, "TCGA"),
-                              str_c("TCGA-", str_split_i(sample, "[_|.]", 1)),
+                              str_c("TCGA-",
+                                    str_split_i(sample, "[_.]", 1)),
                               sample)) |>
+  
   # 3. Mean per protein and patient (only the replicates actually change)
-  group_by(RefSeq_accession_number, gene_symbol, gene_name, patient_id) |>
-  summarise(log2_ratio = mean(log2_ratio, na.rm = TRUE), .groups = "drop") |>
-  # 4. NaN (both copies missing) -> NA
+  group_by(RefSeq_accession_number, patient_id) |>
+  summarise(log2_ratio = mean(log2_ratio,
+                              na.rm = TRUE),
+            .groups = "drop") |>
+  
+  # 4. Turn NaN's from mean() into true NA's
   mutate(log2_ratio = if_else(is.nan(log2_ratio), NA_real_, log2_ratio)) |>
+  
   # 5. Back to wide format
   pivot_wider(names_from = patient_id,
               values_from = log2_ratio)
 ```
 
-```{r}
-proteomes_mean_without_control <- proteomes |>
-  # 1. Long format: one row per protein and sample
-  pivot_longer(cols = contains("TCGA"),
-               names_to = "sample",
-               values_to = "log2_ratio") |>
-  # 2. Patient ID from the sample name: AO-A12D.01TCGA -> TCGA-AO-A12D
-  mutate(patient_id = str_c("TCGA-", str_split_i(sample, "[_|.]", 1))) |>
-  # 3. Mean per protein and patient (replicates are averaged, others are unchanged)
-  group_by(RefSeq_accession_number, gene_symbol, gene_name, patient_id) |>
-  summarise(log2_ratio = mean(log2_ratio, na.rm = TRUE), .groups = "drop") |>
-  # 4. If both copies are missing, mean() gives NaN; make it a normal NA
-  mutate(log2_ratio = if_else(is.nan(log2_ratio), NA_real_, log2_ratio)) |>
-  # 5. Back to wide format: one column per patient
-  pivot_wider(names_from = patient_id,
-              values_from = log2_ratio)
-```
+### Renaming columns of the PAM50 file before merging
 
-### Renaming columns of the PAM50 file before mergeing
-
-Look at the pam50 dataset
+The columns in the PAM50 dataset have a slightly different naming convention:
 
 ```{r}
 head(pam50)
 ```
 
-Before filtering the proteomic dataset with the PAM50 reference list, we rename RefSeqProteinID to RefSeq_accession_number in the pam50 table so that both of the dataset have the same key column name for joining.
+In order to filter the proteomic dataset down to only the PAM50 gene reference list, we rename RefSeqProteinID to RefSeq_accession_number in the PAM50 table to get a common column name.
 
 ```{r}
 pam50 <- pam50 |> 
@@ -128,142 +125,108 @@ pam50 <- pam50 |>
 
 ### Merge data
 
-#### Merge the PAM50 dataset with the proteomes dataset
+#### Proteomes for only PAM50 genes
 
-The PAM50 dataset contains the relevant proteins to study for the different subtypes of breast cancer. Consequently, we merge those two dataset to keep only the relevant proteins in our study. Merging at the time of the study is interesting because the results will be much sharper and easier to interpret.
+The PAM50 dataset contains genes, whose mRNA expression signatures can be used to classify breast cancer into 5 different subtypes. To compare classification by mRNA expression (assigned labels in clinical data) vs protein expression for these genes, we merge these two datasets, keeping only the expression profiles of PAM50 proteins for our study.
 
 ```{r}
 # left joins to only keep the 100 reference genes for breast cancer
-proteomes_with_control_pam50_joined <-  inner_join(pam50,proteomes_mean_with_control, 
-                                                   by ="RefSeq_accession_number")
+proteomes_pam50_joined <-  inner_join(pam50, 
+                                      proteomes_dupmean, 
+                                      by ="RefSeq_accession_number")
 
-proteomes_without_control_pam50_joined <- inner_join(pam50,proteomes_mean_without_control, 
-                                                      by = "RefSeq_accession_number")
-
-head(proteomes_with_control_pam50_joined)
-head(proteomes_without_control_pam50_joined)
+head(proteomes_pam50_joined)
 ```
 
-This first step merged the two tables according to the RefSeq_accession_number column.
+#### Entire proteomes dataset merged with the clinical dataset
 
-### Merge the raw proteomes dataset with the clinical dataset
-
-Here we merge all the proteomes data with the clinical data
+In order to utilise the clinical data for each patient, such as the RNA PAM50 classification of breast cancer subtypes, in our analysis, we join the proteomic data to the clinical dataset. As the clinical data has patient IDs in a column, we transpose the proteomic data:
 
 ```{r}
-proteomes_mean_with_control_longer <- proteomes_mean_with_control |> 
-  select(-c(gene_name,gene_symbol)) |> 
+proteomes_dupmean_transposed <- proteomes_dupmean |> 
+  # keep only accession numbers and expression level cols
+  select(RefSeq_accession_number, 
+         ends_with("CPTAC") | starts_with("TCGA")) |>
+  
+  # get one row pr. protein x patient
   pivot_longer(
-    # take all the columns from the patients (= everything but proteins_id)
     cols = -RefSeq_accession_number, 
     names_to = "patient_id",
-    # log 
     values_to = "log2_ratio") |> 
-  # put each unique protein as an unique column  
+  
+  # get one row pr. patient, one col pr. protein
   pivot_wider(
     names_from = RefSeq_accession_number,
     values_from = log2_ratio
   )
-
 ```
 
+We can now join by the common column 'patient_id', called 'Complete TCGA ID' in the clinical dataset:
+
 ```{r}
-final_with_control_dataset_all_genes <- left_join(
-  proteomes_mean_with_control_longer, 
+final_dataset_all_genes <- left_join(
+  proteomes_dupmean_transposed, 
   clinical, 
   by = c("patient_id" = "Complete TCGA ID")
 )
 
-View(final_with_control_dataset_all_genes)
+head(final_dataset_all_genes)
 ```
 
-### Merge the filtered proteomes dataset with the clinical dataset
-
-Here is a visualization of the clinical metadata
+#### PAM50 filtered proteomes merged with clinical data
 
 ```{r}
-head(clinical)
-```
-
-Before merging those two tables, we need to be sure that they share a common structure and that patients ID match.
-
-First, we need to pivot the proteomes dataset so patients will be on rows as for the clinical table and unique protein isoforms on columns. Use the proteomes without control because we are only interested into tumors and not the healthy data.
-
-```{r}
-proteomes_without_control_transposed <- proteomes_without_control_pam50_joined |> 
-  # create an unique ID for each isoform 
-  mutate(protein_id = str_c(gene_symbol, "_", RefSeq_accession_number)) |> 
-  # keep only the new ID and patients columns 
-  select(protein_id, starts_with("TCGA")) |>  
-  # put each patient on one row 
+proteomes_pam50_transposed <- proteomes_pam50_joined |> 
+  # keep only accession numbers and expression level cols
+  select(RefSeq_accession_number, 
+         ends_with("CPTAC") | starts_with("TCGA")) |> 
+  
+  # get one row pr. protein x patient
   pivot_longer(
-    # take all the columns from the patients (= everything but proteins_id)
-    cols = -protein_id, 
-    names_to = "patient_id",
-    # log 
-    values_to = "log2_ratio"
-  ) |> 
-  # put each unique protein as an unique column  
-  pivot_wider(
-    names_from = protein_id,
-    values_from = log2_ratio
-  )
-
-head(proteomes_without_control_transposed)
-```
-
-We went from proteome filtered datset where patients are in columns and lines are proteins. We took all the columns of the patients and tranformed it in lines containing each patient + protein + value associated (pivot_longer step). And after take all the proteins and spread them into columns (pivot_wider step). =\> the same structure than the clinical table.
-
-Now, the objective is to merge the clinical metadata to add relevant informations to the filtered proteomes dataset.
-
-```{r}
-final_without_control_dataset <- inner_join(proteomes_without_control_transposed, clinical, 
-                            by = c("patient_id" = "Complete TCGA ID")
-)
-
-View(final_without_control_dataset)
-```
-
-```{r}
-proteomes_with_control_transposed <- proteomes_with_control_pam50_joined |> 
-  select(RefSeq_accession_number, ends_with("CPTAC") | starts_with("TCGA")) |> 
-  # put each patient on one row 
-  pivot_longer(
-    # take all the columns from the patients (= everything but proteins_id)
     cols = -RefSeq_accession_number, 
     names_to = "patient_id",
-    # log 
     values_to = "log2_ratio"
   ) |> 
-  # put each unique protein as an unique column  
+  
+  # get one row pr. patient, one col pr. protein
   pivot_wider(
     names_from = RefSeq_accession_number,
     values_from = log2_ratio
   )
 
-head(proteomes_with_control_transposed)
+head(proteomes_pam50_transposed)
 ```
 
+Sanity check of columns removed from clinical + proteome join (delete?)
+
 ```{r}
-final_with_control_dataset_pam50_filtered <- left_join(
-  proteomes_with_control_transposed, 
+setdiff(names(proteomes_pam50_joined),
+        names(select(proteomes_pam50_joined,
+                     RefSeq_accession_number, ends_with("CPTAC") | starts_with("TCGA"))))
+```
+
+left_join(), creating NA's in all clinical data columns for Control samples.
+
+```{r}
+final_pam50_filtered <- left_join(
+  proteomes_pam50_transposed, 
   clinical, 
   by = c("patient_id" = "Complete TCGA ID")
 )
 
-View(final_with_control_dataset_pam50_filtered )
+head(final_pam50_filtered)
 ```
 
-### Write the final dataframes as tsv files in the data folder
+### Write final tibbles to tsv files in the data folder
 
 ```{r}
-data_path = "../data/"
-write_tsv(x = final_with_control_dataset_pam50_filtered, 
-          file = str_c(data_path, "01_dat_load_final_with_control_pam50_filtered.tsv"))
-```
+data_path <- "../data/"
 
-```{r}
-data_path = "../data/"
-write_tsv(x = final_with_control_dataset_all_genes, 
-          file = str_c(data_path, "01_dat_load_final_with_control_dataset_all_genes.tsv"))
+write_tsv(x = final_pam50_filtered, 
+          file = str_c(data_path, 
+                       "01_dat_load_final_pam50_filtered.tsv"))
+
+write_tsv(x = final_dataset_all_genes, 
+          file = str_c(data_path, 
+                       "01_dat_load_final_dataset_all_genes.tsv"))
 ```
