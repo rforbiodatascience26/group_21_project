@@ -14,12 +14,14 @@ library("factoextra")
 
 ```{r}
 # Load datasets into environment
-data_path = "../data/"
+data_path <- "../data/"
 
 
-pam50_augmented <- read_tsv(str_c(data_path, "03_dat_augment_pam50_filtered.tsv"), 
+pam50_augmented <- read_tsv(str_c(data_path, 
+                                  "03_dat_augment_pam50_filtered.tsv"), 
                                  show_col_types = FALSE)
-all_genes_augmented  <- read_tsv(str_c(data_path, "03_dat_augment_all_genes.tsv"), 
+all_genes_augmented  <- read_tsv(str_c(data_path, 
+                                       "03_dat_augment_all_genes.tsv"), 
                              show_col_types = FALSE)
 ```
 
@@ -65,7 +67,7 @@ Now, we are plotting the 15 proteins that contribute the most to the first two p
 ```{r}
 pc_var <- pca_res |> 
   tidy(matrix="eigenvalues") |> 
-  mutate(label = str_c("PC", PC, "(", round(percent*100, 1), "%"))
+  mutate(label = str_c("PC", PC, "(", round(percent*100, 1), "%)"))
 
 #Now we extract the labels to avoid using base R
 extract_label <- function (pca_n){
@@ -86,7 +88,7 @@ Finally, we are making a scatterplot colored by subtype to help us answer the if
 pca_scores <- pca_res |> 
   augment(data = pca_wide) |> 
   rename_with(\(x) str_remove(x, "\\.fitted"),
-              startw_with(".firred")) |> 
+              start_with(".fitted")) |> 
   select(patient_id, 
          subtype, 
          starts_with("PC"))
@@ -95,7 +97,7 @@ pca_scores <- pca_res |>
 pca_scores |> 
   ggplot(aes(x=PC1, y=PC2, color = subtype)) +
   geom_point(size=3, alpha=0.8) +
-  labs(x = pc1_label, y = pc2_label, colorr ="PAM50 subtype") +
+  labs(x = pc1_label, y = pc2_label, color ="PAM50 subtype") +
   theme_minimal()
 ```
 
@@ -110,7 +112,7 @@ pam50_ids <- read_csv("../data/_raw/PAM50_proteins.csv",
                       show_col_types=FALSE) |> 
   pull(RefSeqProteinID)
 
-pam50_only<- pca_wide |> 
+pam50_only <- pca_wide |> 
   select(any_of(pam50_ids))
 
 no_pam50 <- pca_wide |> 
@@ -141,7 +143,7 @@ We can compare the clusters we obtained with the known subtypes. The next chunks
 
 ```{r}
 pca_kmeans <- pca_scores |> 
-  bind_col(
+  bind_cols(
     augment(km_pam50, pam50_only) |> 
       select(cluster_pam50 = .cluster),
     augment(km_nopam50, no_pam50) |> 
@@ -151,10 +153,17 @@ pca_kmeans <- pca_scores |>
 
 ```{r}
 pca_kmeans |> 
+  count(subtype, cluster_pam50) |> 
+  pivot_wider(names_from = cluster_pam50,
+              values_from = n,
+              values_fill = 0)
+
+pca_kmeans |> 
   count(subtype, cluster_nopam50) |> 
   pivot_wider(names_from = cluster_nopam50,
               values_from = n,
               values_fill=0)
+
 ```
 
 ```{r}
