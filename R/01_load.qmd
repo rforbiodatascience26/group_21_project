@@ -6,8 +6,6 @@ editor: visual
 
 #### Import packages
 
-Import the different libraries we will need as well as our custom function.
-
 ```{r, message=FALSE}
 library("tidyverse")
 ```
@@ -56,10 +54,7 @@ pam50 <- read_csv(str_c("../data/_raw/",
                   show_col_types = FALSE)
 ```
 
-
-
 ### Write the final dataframes as tsv files in the data folder
-
 
 ```{r}
 data_path = "../data/"
@@ -75,5 +70,4 @@ write_tsv(x = proteomes,
 write_tsv(x = clinical, 
           file = str_c(data_path, 
                        "01_dat_load_clinical.tsv"))
-
 ```
