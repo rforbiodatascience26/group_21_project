@@ -4,43 +4,175 @@ format: html
 editor: visual
 ---
 
-## Load packages
+### Load packages
 
 ```{r}
 library(tidyverse)
+source("99_my_transpose.R")
 ```
 
-## Loading output data from 01_load
+### Loading output data from 01_load
 
 ```{r, warning=FALSE}
 # Load datasets into environment
 data_path <- "../data/"
 
-pam50_filtered <- read_tsv(str_c(data_path, "01_dat_load_final_with_control_pam50_filtered.tsv"),
+pam50 <- read_tsv(str_c(data_path, "01_dat_load_pam50.tsv"),
                            show_col_types = FALSE)
-all_genes  <- read_tsv(str_c(data_path, "01_dat_load_final_with_control_dataset_all_genes.tsv"),
+proteomes  <- read_tsv(str_c(data_path, "01_dat_load_proteomes.tsv"),
                        show_col_types = FALSE)
+clinical <- read_tsv(str_c(data_path, "01_dat_load_clinical.tsv"),
+                     show_col_types = FALSE)
 ```
 
-### Removing all NA values from the PAM50 filtered data
+### Duplicate samples
+
+For three of the patients, duplicate samples were collected. First we check the correlation between duplicate samples to be sure that duplicates from the same patient are consistent.
+
+```{r}
+# Set up variables 
+sample_cols <- proteomes |>
+  select(contains("TCGA")) |>
+  names()
+patients <- str_split_i(sample_cols, "[_.]", 1)
+dup_patients <- tibble(patient = patients) |>
+  count(patient) |>
+  filter(n > 1) |>
+  pull(patient)  
+
+# Compute correlation matrices for duplicate samples 
+dup_cor_matrices <- dup_patients |>
+  set_names() |>
+  map(function(p){
+    proteomes |>
+      select(starts_with(p)) |>
+      cor(use = "pairwise.complete.obs") |>
+      round(3)   
+    }
+    )
+
+dup_cor_matrices
+```
+
+#### Mean duplicate protein expression levels
+
+We merge the duplicates so that each patient has only one measured protein expression level pr. protein. We do this by taking the mean between the two duplicate samples, seeing as the three duplicates correlate well.
+
+```{r}
+proteomes_dupmean <- proteomes |>
+  # 1. Long format only protein expression cols
+  pivot_longer(cols = -c(RefSeq_accession_number, gene_symbol, gene_name),
+               names_to = "sample",
+               values_to = "log2_ratio") |>
+  
+  # 2. Patient ID: tumors get TCGA-AO.A12D format, controls keep their own name
+  mutate(patient_id = if_else(str_detect(sample, "TCGA"),
+                              str_c("TCGA-", str_split_i(sample, "[_.]", 1)),
+                              sample)) |>
+  
+  # 3. Mean per protein and patient (only the replicates actually change)
+  group_by(RefSeq_accession_number, patient_id) |>
+  summarise(log2_ratio = mean(log2_ratio, na.rm = TRUE),
+            .groups = "drop") |>
+  
+  # 4. Turn NaN's from mean() into true NA's
+  mutate(log2_ratio = if_else(is.nan(log2_ratio),
+                              NA_real_,
+                              log2_ratio)) |>
+  
+  # 5. Back to wide format
+  pivot_wider(names_from = patient_id,
+              values_from = log2_ratio)
+```
+
+### Renaming columns of the PAM50 file before merging
+
+The columns in the PAM50 dataset have a slightly different naming convention:
+
+```{r}
+head(pam50)
+```
+
+In order to filter the proteomic dataset down to only the PAM50 gene reference list, we rename RefSeqProteinID to RefSeq_accession_number in the PAM50 table to get a common column name.
+
+```{r}
+pam50 <- pam50 |>
+  rename(RefSeq_accession_number = RefSeqProteinID)
+```
+
+### Merge data
+
+#### Proteomes for only PAM50 genes
+
+The PAM50 dataset contains genes, whose mRNA expression signatures can be used to classify breast cancer into 5 different subtypes. To compare classification by mRNA expression (assigned labels in clinical data) vs protein expression for these genes, we merge these two datasets, keeping only the expression profiles of PAM50 proteins for our study.
+
+```{r}
+# left joins to only keep the 100 reference genes for breast cancer
+proteomes_pam50_joined <-  inner_join(pam50,
+                                      proteomes_dupmean,
+                                      by = "RefSeq_accession_number"
+                                      )
+
+head(proteomes_pam50_joined)
+```
+
+#### Entire proteomes dataset merged with the clinical dataset
+
+In order to utilise the clinical data for each patient, such as the RNA PAM50 classification of breast cancer subtypes, in our analysis, we join the proteomic data to the clinical dataset. As the clinical data has patient IDs in a column, we transpose the proteomic data:
+
+```{r}
+proteomes_dupmean_transposed <- my_transpose(proteomes_dupmean)
+
+head(proteomes_dupmean_transposed)
+```
+
+We can now join by the common column 'patient_id', called 'Complete TCGA ID' in the clinical dataset:
+
+```{r}
+final_dataset_all_genes <- left_join(proteomes_dupmean_transposed,
+                                     clinical,
+                                     by = c("patient_id" = "Complete TCGA ID")
+                                     )
+
+head(final_dataset_all_genes)
+```
+
+#### PAM50 filtered proteomes merged with clinical data
+
+```{r}
+proteomes_pam50_transposed <- my_transpose(proteomes_pam50_joined)
+
+head(proteomes_pam50_transposed)
+```
+
+left_join(), creating NA's in all clinical data columns for Control samples.
+
+```{r}
+final_pam50_filtered <- left_join(proteomes_pam50_transposed,
+                                  clinical,
+                                  by = c("patient_id" = "Complete TCGA ID")
+                                  )
+
+head(final_pam50_filtered)
+```
+
+### Removing NA's
+
+#### From PAM50 set
 
 ```{r}
 pam50_filtered_without_NA <- pam50_filtered |> 
   select(-(where(anyNA) & !starts_with("PAM50")))
-```
 
-```{r}
 head(pam50_filtered_without_NA)
 ```
 
-### Removing all NA values from the all genes data
+#### From whole proteome set
 
 ```{r}
 all_genes_without_NA <- all_genes |> 
   select(-(where(anyNA) & !starts_with("PAM50")))
-```
 
-```{r}
 head(all_genes_without_NA)
 ```
 
@@ -48,7 +180,7 @@ head(all_genes_without_NA)
 
 ```{r}
 write_tsv(pam50_filtered_without_NA, 
-          file = str_c(data_path, "02_dat_clean_pam50_filtered_without_NA.tsv"))
+          file = str_c(data_path, "02_dat_clean_pam50_filtered.tsv"))
 write_tsv(all_genes_without_NA, 
-          file = str_c(data_path, "02_dat_clean_all_genes_without_NA.tsv"))
+          file = str_c(data_path, "02_dat_clean_all_genes.tsv"))
 ```
