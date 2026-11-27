@@ -4,6 +4,19 @@ format: html
 editor: visual
 ---
 
+## Loading output data from 03_augment
+
+```{r}
+# Load datasets into environment
+data_path = "../data/"
+
+
+pam50_augmented <- read_tsv(str_c(data_path, "03_dat_augment_pam50_filtered.tsv"), 
+                                 show_col_types = FALSE)
+all_genes_augmented  <- read_tsv(str_c(data_path, "03_dat_augment_all_genes.tsv"), 
+                             show_col_types = FALSE)
+```
+
 # Analysis
 
 ## Principal Component Analysis
@@ -158,5 +171,5 @@ fviz_cluster(km_nopam50, data = no_pam50, main ="K-Means: without PAM50 proteins
 
 ## References:
 
-- GeeksForGeeks. (2026). *Principal Component Analysis with R Programming.* Retrieved from: <https://www.geeksforgeeks.org/r-language/principal-component-analysis-with-r-programming/>
-- GeeksForGeeks. (2025). *K-Means Clustering in R Programming.* Retrieved from: <https://www.geeksforgeeks.org/r-language/k-means-clustering-in-r-programming/>
+-   GeeksForGeeks. (2026). *Principal Component Analysis with R Programming.* Retrieved from: <https://www.geeksforgeeks.org/r-language/principal-component-analysis-with-r-programming/>
+-   GeeksForGeeks. (2025). *K-Means Clustering in R Programming.* Retrieved from: <https://www.geeksforgeeks.org/r-language/k-means-clustering-in-r-programming/>

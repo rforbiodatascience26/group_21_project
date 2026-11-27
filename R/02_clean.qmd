@@ -4,7 +4,6 @@ format: html
 editor: visual
 ---
 
-
 ### Load packages
 
 ```{r}
@@ -13,8 +12,6 @@ source("99_my_transpose.R")
 ```
 
 ### Loading output data from 01_load
-
-
 
 ```{r, warning=FALSE}
 # Load datasets into environment
@@ -70,23 +67,23 @@ head(proteomes)
 proteomes_dupmean <- proteomes |> 
   # Pivot longer only keeping 
   pivot_longer(cols = -c(RefSeq_accession_number, gene_symbol,gene_name),
-               names_to = "ID",
+               names_to = "patient_id",
                values_to = "log2_ratio") |> 
   
   # Changeing patient id's to get a shared column with the pam50 dataset
-  mutate(patient_id = if_else(str_ends(ID, "TCGA"),
-                              # Change the order of the ID so TCGA is first and the other substring after
-                              str_c("TCGA-", str_sub(ID, 1, 7)),
-                              ID)) |> 
+  mutate(patient_id = if_else(str_ends(patient_id, "TCGA"),
+                              # Change the order of the patient_id so TCGA is first and the other substring after
+                              str_c("TCGA-", str_sub(patient_id, 1, 7)),
+                              patient_id)) |> 
 
-  # Locating duplicates for all the transcripts by grouping using the accession number and the ID. 
-  group_by(RefSeq_accession_number, ID) |> 
+  # Locating duplicates for all the transcripts by grouping using the accession number and the patient_id. 
+  group_by(RefSeq_accession_number, patient_id) |> 
   # Calculate the average log2_ratio for all the groups (duplicates). If one of the replicate contains NA use the other value
   summarise(log2_ratio = mean(log2_ratio, na.rm = TRUE),
             .groups = "drop") |> 
   
-  # Pivot wide to get ID's back as columns
-  pivot_wider(names_from = ID,
+  # Pivot wide to get patient_id's back as columns
+  pivot_wider(names_from = patient_id,
               values_from = log2_ratio)
 
 ```
@@ -167,6 +164,10 @@ head(final_pam50_filtered)
 ```
 
 ### Removing NA's
+
+```{r}
+final_pam50_filtered
+```
 
 #### From PAM50 set
 
