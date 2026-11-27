@@ -10,6 +10,22 @@ editor: visual
 library(tidyverse)
 ```
 
+### Load data 
+
+Load the clean data coming from the augment file.
+
+```{r}
+data_path = "../data/"
+
+dat_pam50 <- read_tsv(str_c(data_path, 
+                            "03_dat_augment_pam50_filtered.tsv"))
+
+dat_all <- read_tsv(str_c(data_path, 
+                          "03_dat_augment_all_genes.tsv"))
+```
+
+
+
 ### Descriptive statistics
 
 *\*\*Most of this should probably be deleted, and just used for the presentation. We should likely restrict this file to just describe the fully cleaned+augmented/analysis ready data.*
