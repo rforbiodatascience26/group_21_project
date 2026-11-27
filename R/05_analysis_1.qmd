@@ -62,7 +62,7 @@ pca_res |>
   slice_head(n=5)
 ```
 
-Now, we are plotting the 15 proteins that contribute the most to the first two principal components to observe the direction and the overall contribution of the variables in the PCs.
+Before continuing, we will add a chunk of code that will be useful to extract the labels to avoid using base R. This will be needed in a couple of our following steps.
 
 ```{r}
 pc_var <- pca_res |> 
@@ -79,16 +79,15 @@ extract_label <- function (pca_n){
 pc1_label <- extract_label(1)
 pc2_label <- extract_label(2)
 
-fviz_pca_var(pca_res, select.var = list(contrib=15), repel = TRUE)
 ```
 
-Finally, we are making a scatterplot colored by subtype to help us answer the if tumors belonging to the same subtype share proteins. If the subtypes properly separate, then we could argue that proteins seem to distinguish the subtypes; whereas if they're all scattered, then the proteins aren't enough to do so. Also, the groups that are placed closer to one another will have similar profiles.
+Now, we are making a scatterplot colored by subtype to help us answer the if tumors belonging to the same subtype share proteins. If the subtypes properly separate, then we could argue that proteins seem to distinguish the subtypes; whereas if they're all scattered, then the proteins aren't enough to do so. Also, the groups that are placed closer to one another will have similar profiles.
 
 ```{r}
 pca_scores <- pca_res |> 
   augment(data = pca_wide) |> 
   rename_with(\(x) str_remove(x, "\\.fitted"),
-              start_with(".fitted")) |> 
+              starts_with(".fitted")) |> 
   select(patient_id, 
          subtype, 
          starts_with("PC"))
@@ -97,13 +96,42 @@ pca_scores <- pca_res |>
 pca_scores |> 
   ggplot(aes(x=PC1, y=PC2, color = subtype)) +
   geom_point(size=3, alpha=0.8) +
-  labs(x = pc1_label, y = pc2_label, color ="PAM50 subtype") +
+  labs(title = "PCA of breast tumors proteomes", 
+       x = pc1_label, 
+       y = pc2_label, 
+       color ="PAM50 subtype") +
   theme_minimal()
 ```
 
+After having observed the scatterplot, we notice that in two dimensions, the patients with basal-like breast cancer separate on the top of the plot. Meanwhile, the rest of the patients sit in a continuum. As a next step, we are graphing the 10 proteins that contribute the most to the first two principal components to observe the direction and the overall contribution of the variables in the PCs.
+
+```{r}
+fviz_pca_var(pca_res, select.var = list(contrib=10), repel = TRUE)
+```
+
+With the names we have in the previous plot, it is unclear which protein is which, so now we will see which proteins (with their gene names) have a greater magnitude in principal component 2. We are only focusing on PC2, because it's precisely in that direction where basal-like tumors spread, and we want to figure what is separating that subtype from the other three.
+
+```{r}
+gene_names <- read_csv("../data/_raw/77_cancer_proteomes_CPTAC_itraq.csv",
+                       show_col_types=FALSE) |> 
+  select(RefSeq_accession_number, gene_symbol, gene_name) |> 
+  distinct()
+
+top_pc2 <- pca_res |> 
+  tidy(matrix = "loadings") |> 
+  filter(PC == 2) |> 
+  slice_max(abs(value), n=10) |> 
+  left_join(gene_names, by=c("column"="RefSeq_accession_number")) |> 
+  select(column, gene_symbol, gene_name, value)
+
+top_pc2
+```
+
+A very interesting remark is that, proteins with large-magnitude PC2 loadings included FOXA1. This is a characteristic transcription factor found in luminal breast cancer, with less presence in basal-like tumors. This is consistent with the separation of basal-like tumors along this axis.
+
 ## K-means
 
-Now, we will carry out k-means clustering (with and without PAM50) as a way to further support the answer we obtain after Principal Component Analysis. Right now, we have the PCA scatterplot, which helps us visually observe whether the subtypes are separated properly given their protein profiles, but a K-means will help us back up any conclusion with more numbers. Once again, this is based on a GeeksForGeeks tutorial.
+Now, we will carry out k-means clustering (with and without PAM50) to understand why it makes sense to use PAM50 proteins to distinguish subtypes rather than using the rest of the proteome as well. Right now, we have the PCA scatterplot, but a K-means will help us explore further. Once again, this is based on a GeeksForGeeks tutorial.
 
 Slight preprocessing to split the protein columns (with and without PAM50).
 
@@ -117,13 +145,6 @@ pam50_only <- pca_wide |>
 
 no_pam50 <- pca_wide |> 
   select(-patient_id, -subtype, -any_of(pam50_ids))
-```
-
-**Check to see how many proteins survived after the NA filter**
-
-```{r}
-ncol(pam50_only)
-ncol(no_pam50)
 ```
 
 Finally, we can carry out the k-means clustering. We are using k = 4 to match the four PAM50 subtypes
@@ -191,6 +212,61 @@ pca_kmeans |>
        y = pc2_label, 
        color = "K-means (without PAM50)",
        shape = "PAM50 subtype") +
+  theme_minimal()
+```
+
+So far, the PAM50 proteins appear to separate basal-like tumors more cleanly than when carrying out k-means without these proteins. The counts reveal that 17 of 18 basal like samples fall in a single cluster versus 13 of 18 without PAM50; however, HER2-enriched and luminal samples are consistently mixed across clusters in both cases. It is important to distinguish that the PAM50 set contains a few protein, whereas the rest of the proteome has thousands, so the difference could be due to set size and not to the PAM50 proteins themselves.
+
+## ARI
+
+In this last part of the analysis, we want to quantify how well the clusters match the known subtypes, so we are using the Adjusted Rand Index (ARI). This will allow us to check for every pair of patients if the clusters and the subtypes agree on grouping them (or not), or if this is happening merely by chance. Since the PAM50 set has fewer proteins than the rest of the proteome, we will compare its ARI against 100 random sets of proteins of the same size.
+
+```{r}
+n_pam50 <- ncol(pam50_only)
+subtypes <- pull(pca_wide, subtype)
+
+n_pam50
+```
+
+```{r}
+random_ari <- function(n_proteins){
+  chosen <- tibble(protein=names(no_pam50)) |> 
+    slice_sample(n=n_proteins) |> 
+    pull(protein)
+  
+  random_set <- no_pam50 |> 
+    select(all_of(chosen))
+  
+  clusters <- kmeans_clust(random_set) |> 
+    augment(random_set) |> 
+    pull(.cluster)
+  
+  adjusted_rand(subtypes, clusters)
+}
+```
+
+```{r}
+set.seed(42)
+random_scores <- tibble(rep = 1:100) |> 
+  #100 different samples equal size to ncol(pam50_only)
+  mutate(ari = map_dbl(rep, \(i) random_ari(n_pam50)))
+```
+
+```{r}
+ari_pam50 <- adjusted_rand(subtypes, pull(pca_kmeans, cluster_pam50))
+
+random_scores |> 
+  summarise(p_empirical = mean(ari>=ari_pam50))
+```
+
+```{r}
+random_scores |> 
+  ggplot(aes(x=ari))+
+  geom_histogram(bins=20)+
+  geom_vline(xintercept = ari_pam50, linetype = "dashed") +
+  labs(title = "ARI of random protein sets vs PAM50",
+       x = "ARI",
+       y = "Count") +
   theme_minimal()
 ```
 
