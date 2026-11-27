@@ -6,11 +6,10 @@ editor: visual
 
 #### Import packages
 
-Import the different libraries we will need.
+Import the different libraries we will need as well as our custom function.
 
 ```{r, message=FALSE}
 library("tidyverse")
-library("curl")
 ```
 
 #### Load data
@@ -19,53 +18,60 @@ Import the data from Kaggle ("https://www.kaggle.com/datasets/piotrgrabo/breastc
 
 ```{r}
 # Create data folders
-dir.create("../data/_raw", recursive = TRUE, showWarnings = FALSE)
+raw_dir = "../data/_raw"
+if(!dir.exists(raw_dir)){
+  dir.create(raw_dir, recursive = TRUE, showWarnings = FALSE)
+}
 
 # Download data
-curl_download(
-  url = "https://www.kaggle.com/api/v1/datasets/download/piotrgrabo/breastcancerproteomes",
-  destfile = "../data/_raw/breastcancerproteomes.zip",
-  mode = "wb"
-)
+raw_zip = "../data/_raw/breastcancerproteomes.zip"
+if(!file.exists(raw_zip)){
+  download.file(
+    url = "https://www.kaggle.com/api/v1/datasets/download/piotrgrabo/breastcancerproteomes",
+    destfile = raw_zip,
+    mode = "wb"
+  )
+}
 
-# Unzip
-unzip("../data/_raw/breastcancerproteomes.zip",
-      exdir = "../data/_raw")
+# Extract data
+if(file.exists(raw_zip))
+  # Unzip
+  unzip(raw_zip,
+        exdir = "../data/_raw")
 
-# Remove ZIP archive
-invisible(file.remove("../data/_raw/breastcancerproteomes.zip"))
+  # Delete ZIP archive after data extraction
+  invisible(file.remove(raw_zip))
 ```
 
 ```{r, warning=FALSE}
 # Load datasets into environment
-file_names <- c(
-  "77_cancer_proteomes_CPTAC_itraq.csv",
-  "clinical_data_breast_cancer.csv",
-  "PAM50_proteins.csv"
-)
-
-proteomes <- read_csv(str_c("../data/_raw/", file_names[1]), show_col_types = FALSE)
-clinical  <- read_csv(str_c("../data/_raw/", file_names[2]), show_col_types = FALSE)
-pam50     <- read_csv(str_c("../data/_raw/", file_names[3]), show_col_types = FALSE)
+proteomes <- read_csv(str_c("../data/_raw/",
+                            "77_cancer_proteomes_CPTAC_itraq.csv"), 
+                      show_col_types = FALSE)
+clinical <- read_csv(str_c("../data/_raw/",
+                           "clinical_data_breast_cancer.csv"),
+                     show_col_types = FALSE)
+pam50 <- read_csv(str_c("../data/_raw/",
+                        "PAM50_proteins.csv"),
+                  show_col_types = FALSE)
 ```
 
+<<<<<<< HEAD
 ### Correlation between duplicates
 
 First we check the correlation between duplicated to be sure that duplicates from the same patient are consistent.
+=======
+### Write tibbles to tsv files in the data folder for downstream cleaning
+>>>>>>> f653ccdf4505b779219b4a22dcca7a06a18f7c02
 
 ```{r}
-sample_cols  <- str_subset(names(proteomes), "TCGA")
-patients     <- str_split_i(sample_cols, "[_|.]", 1)
-dup_patients <- unique(patients[duplicated(patients)])
+data_path <- "../data/"
 
-dup_cor_matrices <- map(dup_patients, \(p) {
-  proteomes |>
-    select(all_of(sample_cols[patients == p])) |>
-    cor(use = "pairwise.complete.obs") |>
-    round(3)
-}) |>
-  set_names(dup_patients)
+write_tsv(x = pam50, 
+          file = str_c(data_path, 
+                       "01_dat_load_pam50.tsv"))
 
+<<<<<<< HEAD
 dup_cor_matrices
 ```
 
@@ -271,4 +277,13 @@ write_tsv(x = final_with_control_dataset_pam50_filtered,
 data_path = "../data/"
 write_tsv(x = final_with_control_dataset_all_genes, 
           file = str_c(data_path, "01_dat_load_final_with_control_dataset_all_genes.tsv"))
+=======
+write_tsv(x = proteomes, 
+          file = str_c(data_path, 
+                       "01_dat_load_proteomes.tsv"))
+
+write_tsv(x = clinical, 
+          file = str_c(data_path, 
+                       "01_dat_load_clinical.tsv"))
+>>>>>>> f653ccdf4505b779219b4a22dcca7a06a18f7c02
 ```
