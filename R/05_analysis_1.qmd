@@ -140,7 +140,49 @@ km_nopam50 <- kmeans_clust(no_pam50)
 We can compare the clusters we obtained with the known subtypes. The next chunks will help us visualize the cluster plots. It is important to mention that this plot will combine both the PC scores together with the results obtained by k-means.
 
 ```{r}
+pca_kmeans <- pca_scores |> 
+  bind_col(
+    augment(km_pam50, pam50_only) |> 
+      select(cluster_pam50 = .cluster),
+    augment(km_nopam50, no_pam50) |> 
+      select(cluster_nopam50 = .cluster)
+    )
+```
 
+```{r}
+pca_kmeans |> 
+  count(subtype, cluster_nopam50) |> 
+  pivot_wider(names_from = cluster_nopam50,
+              values_from = n,
+              values_fill=0)
+```
+
+```{r}
+#Clusters from the PAM50 proteins
+pca_kmeans |> 
+  ggplot(aes(x=PC1, y=PC2, color = cluster_pam50, shape=subtype)) +
+  geom_point(size=3, alpha = 0.8) +
+  stat_ellipse(aes(group=cluster_pam50)) +
+  labs(title = "K-means clusters (PAM50 proteins)",
+       x = pc1_label,
+       y= pc2_label,
+       color = "K-means (PAM50 proteins)",
+       shape = "PAM50 subtype") +
+  theme_minimal()
+```
+
+```{r}
+#Clusters for the rest of the proteome minus the PAM50 proteins
+pca_kmeans |> 
+  ggplot(aes(x=PC1, y=PC2, color = cluster_nopam50, shape=subtype)) +
+  geom_point(size=3, alpha = 0.8) +
+  stat_ellipse(aes(group = cluster_nopam50)) +
+  labs(title = "K-means (without PAM50)",
+       x = pc1_label,
+       y = pc2_label, 
+       color = "K-means (without PAM50)",
+       shape = "PAM50 subtype") +
+  theme_minimal()
 ```
 
 ## References:
