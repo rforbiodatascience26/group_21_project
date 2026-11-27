@@ -1,0 +1,910 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.9.38">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+
+<title>05_analysis_1</title>
+<style>
+/* Default styles provided by pandoc.
+** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+*/
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+</style>
+
+
+<script src="05_analysis_1_files/libs/clipboard/clipboard.min.js"></script>
+<script src="05_analysis_1_files/libs/quarto-html/quarto.js" type="module"></script>
+<script src="05_analysis_1_files/libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="05_analysis_1_files/libs/quarto-html/popper.min.js"></script>
+<script src="05_analysis_1_files/libs/quarto-html/tippy.umd.min.js"></script>
+<script src="05_analysis_1_files/libs/quarto-html/anchor.min.js"></script>
+<link href="05_analysis_1_files/libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="05_analysis_1_files/libs/quarto-html/quarto-syntax-highlighting-15634bcf2e68342d4ad2dfa704d543f6.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="05_analysis_1_files/libs/bootstrap/bootstrap.min.js"></script>
+<link href="05_analysis_1_files/libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="05_analysis_1_files/libs/bootstrap/bootstrap-590d2a5df93cfe32e54552d6a032068b.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+
+
+</head>
+
+<body class="fullcontent quarto-light">
+
+<div id="quarto-content" class="page-columns page-rows-contents page-layout-article">
+
+<main class="content" id="quarto-document-content">
+
+<header id="title-block-header" class="quarto-title-block default">
+<div class="quarto-title">
+<h1 class="title">05_analysis_1</h1>
+</div>
+
+
+
+<div class="quarto-title-meta">
+
+    
+  
+    
+  </div>
+  
+
+
+</header>
+
+
+<section id="analysis" class="level1">
+<h1>Analysis</h1>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(<span class="st">"tidyverse"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stderr">
+<pre><code>── Attaching core tidyverse packages ──────────────────────── tidyverse 2.0.0 ──
+✔ dplyr     1.1.4     ✔ readr     2.1.5
+✔ forcats   1.0.0     ✔ stringr   1.5.1
+✔ ggplot2   3.5.1     ✔ tibble    3.2.1
+✔ lubridate 1.9.4     ✔ tidyr     1.3.1
+✔ purrr     1.0.4     
+── Conflicts ────────────────────────────────────────── tidyverse_conflicts() ──
+✖ dplyr::filter() masks stats::filter()
+✖ dplyr::lag()    masks stats::lag()
+ℹ Use the conflicted package (&lt;http://conflicted.r-lib.org/&gt;) to force all conflicts to become errors</code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb3"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(<span class="st">"factoextra"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stderr">
+<pre><code>Welcome! Want to learn more? See two factoextra-related books at https://goo.gl/ve3WBa</code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb5"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(<span class="st">"cluster"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<section id="principal-component-analysis" class="level2">
+<h2 class="anchored" data-anchor-id="principal-component-analysis">Principal Component Analysis</h2>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb6"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>data <span class="ot">&lt;-</span> <span class="fu">read_tsv</span>(<span class="st">"../data/02_dat_augment_all_genes.tsv"</span>, <span class="at">show_col_types =</span> <span class="cn">FALSE</span>)</span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>pca_wide <span class="ot">&lt;-</span> data <span class="sc">|&gt;</span> </span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(<span class="st">`</span><span class="at">PAM50 mRNA</span><span class="st">`</span> <span class="sc">!=</span> <span class="st">"control"</span>) <span class="sc">|&gt;</span> </span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">rename</span>(<span class="at">subtype =</span><span class="st">`</span><span class="at">PAM50 mRNA</span><span class="st">`</span> ) <span class="sc">|&gt;</span> </span>
+<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(patient_id, subtype, <span class="fu">matches</span>(<span class="st">"^[NXY]P_"</span>))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<p>Using the GeeksForGeeks PCA tutorial listed in the references, we carry out PCA with centering, scaling, and retx.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb7"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>pca_res <span class="ot">&lt;-</span> pca_wide <span class="sc">|&gt;</span> </span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(<span class="sc">-</span>patient_id, <span class="sc">-</span>subtype) <span class="sc">|&gt;</span> </span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">prcomp</span>(<span class="at">scale.=</span><span class="cn">TRUE</span>, <span class="at">center=</span><span class="cn">TRUE</span>, <span class="at">retx=</span><span class="cn">TRUE</span>)</span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a><span class="fu">names</span>(pca_res)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] "sdev"     "rotation" "center"   "scale"    "x"       </code></pre>
+</div>
+</div>
+<p>The following two chunks of code will help us observe how much variance is captured by each of the PCs. Then, we will also observe the PC loadings for a couple of proteins.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb9"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(pca_res)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Importance of components:
+                           PC1      PC2      PC3     PC4      PC5      PC6
+Standard deviation     29.2873 25.10870 24.32781 18.7393 18.21868 16.18897
+Proportion of Variance  0.1072  0.07881  0.07398  0.0439  0.04149  0.03276
+Cumulative Proportion   0.1072  0.18602  0.26000  0.3039  0.34539  0.37815
+                            PC7      PC8      PC9     PC10     PC11     PC12
+Standard deviation     14.35666 14.15558 13.31624 13.09520 12.72953 11.88859
+Proportion of Variance  0.02576  0.02505  0.02217  0.02144  0.02026  0.01767
+Cumulative Proportion   0.40391  0.42896  0.45113  0.47256  0.49282  0.51048
+                           PC13     PC14     PC15     PC16    PC17    PC18
+Standard deviation     11.58197 11.46114 10.96233 10.72875 10.6219 10.1967
+Proportion of Variance  0.01677  0.01642  0.01502  0.01439  0.0141  0.0130
+Cumulative Proportion   0.52725  0.54367  0.55869  0.57308  0.5872  0.6002
+                           PC19    PC20    PC21    PC22    PC23    PC24    PC25
+Standard deviation     10.09668 9.92771 9.63731 9.60987 9.48729 9.36373 9.07474
+Proportion of Variance  0.01274 0.01232 0.01161 0.01154 0.01125 0.01096 0.01029
+Cumulative Proportion   0.61292 0.62524 0.63685 0.64840 0.65965 0.67061 0.68090
+                          PC26    PC27    PC28    PC29    PC30    PC31    PC32
+Standard deviation     9.05076 8.81639 8.70384 8.64086 8.55987 8.49111 8.41542
+Proportion of Variance 0.01024 0.00972 0.00947 0.00933 0.00916 0.00901 0.00885
+Cumulative Proportion  0.69114 0.70086 0.71033 0.71966 0.72882 0.73783 0.74669
+                          PC33    PC34    PC35    PC36    PC37    PC38    PC39
+Standard deviation     8.34887 8.23774 8.12240 8.02344 7.96901 7.90818 7.85495
+Proportion of Variance 0.00871 0.00848 0.00825 0.00805 0.00794 0.00782 0.00771
+Cumulative Proportion  0.75540 0.76388 0.77213 0.78017 0.78811 0.79593 0.80364
+                          PC40    PC41    PC42    PC43   PC44    PC45    PC46
+Standard deviation     7.78909 7.71420 7.60022 7.52998 7.4284 7.29241 7.24604
+Proportion of Variance 0.00758 0.00744 0.00722 0.00709 0.0069 0.00665 0.00656
+Cumulative Proportion  0.81123 0.81866 0.82588 0.83297 0.8399 0.84652 0.85308
+                          PC47    PC48    PC49    PC50    PC51   PC52    PC53
+Standard deviation     7.17726 7.10920 7.01345 7.00696 6.91446 6.8684 6.82121
+Proportion of Variance 0.00644 0.00632 0.00615 0.00614 0.00598 0.0059 0.00582
+Cumulative Proportion  0.85952 0.86584 0.87199 0.87812 0.88410 0.8900 0.89581
+                          PC54    PC55    PC56   PC57    PC58    PC59    PC60
+Standard deviation     6.76979 6.68533 6.66530 6.5736 6.50322 6.43995 6.37541
+Proportion of Variance 0.00573 0.00559 0.00555 0.0054 0.00529 0.00518 0.00508
+Cumulative Proportion  0.90154 0.90713 0.91268 0.9181 0.92337 0.92855 0.93363
+                          PC61    PC62   PC63    PC64    PC65    PC66    PC67
+Standard deviation     6.28708 6.27206 6.1332 6.10090 6.04206 5.98860 5.90224
+Proportion of Variance 0.00494 0.00492 0.0047 0.00465 0.00456 0.00448 0.00435
+Cumulative Proportion  0.93857 0.94349 0.9482 0.95285 0.95741 0.96189 0.96625
+                          PC68    PC69    PC70    PC71    PC72    PC73    PC74
+Standard deviation     5.89323 5.71452 5.68561 5.58071 5.47898 5.39432 5.30457
+Proportion of Variance 0.00434 0.00408 0.00404 0.00389 0.00375 0.00364 0.00352
+Cumulative Proportion  0.97059 0.97467 0.97871 0.98260 0.98636 0.98999 0.99351
+                          PC75    PC76      PC77
+Standard deviation     5.15751 5.03057 2.634e-14
+Proportion of Variance 0.00332 0.00316 0.000e+00
+Cumulative Proportion  0.99684 1.00000 1.000e+00</code></pre>
+</div>
+</div>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb11"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a>pca_res<span class="sc">$</span>rotation[<span class="dv">1</span><span class="sc">:</span><span class="dv">5</span>, <span class="dv">1</span><span class="sc">:</span><span class="dv">4</span>] <span class="co">#This is for the first 5 proteins and first 4 PCs. </span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>                  PC1          PC2         PC3           PC4
+NP_000005 0.019794333  0.014701749 0.002839763 -0.0005610758
+NP_000007 0.007233057 -0.016032689 0.001147430  0.0122393386
+NP_000008 0.012351897 -0.009352892 0.005696118  0.0060593210
+NP_000009 0.012565500 -0.005130837 0.004012844  0.0036656793
+NP_000010 0.012973809 -0.012627970 0.007179661  0.0027292241</code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb13"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="fu">head</span>(pca_res<span class="sc">$</span>x)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>            PC1       PC2        PC3         PC4        PC5        PC6
+[1,] -22.761303 38.937655 -26.677601  19.7137603 -16.467361  5.3481769
+[2,]  -3.167261 39.087589 -26.787912  -0.7003937 -21.731448 -8.5000891
+[3,] -26.964797 18.414452 -22.003244  11.9976887  40.278806  9.0445010
+[4,]  58.120249  3.469618  -2.239257  -2.9676736  19.458637  4.4564073
+[5,]  16.593465  5.490603  35.525633   4.7555214 -27.856568 21.6512696
+[6,]  -8.110187 15.433734  23.055318 -26.3228280   2.082952  0.9939188
+            PC7         PC8        PC9        PC10      PC11       PC12
+[1,]  -5.293274  -8.2663856  0.3305371  -0.8308357 10.085833  -8.160047
+[2,]  -3.045963 -13.3934123  4.0880975  -4.8431793 -3.836985  -8.239181
+[3,] -18.535876 -14.3501343 -6.5244583  -6.0028013  6.682433  16.682445
+[4,]   8.615122   0.6098091  7.4023133 -11.6383707 -5.366739  -7.611330
+[5,]  -2.195206 -17.1532950 11.6538711  -5.2321843 -3.065691  11.141322
+[6,] -15.389516  11.9567152 -2.1689259  22.8727163 -7.065996 -12.477321
+           PC13       PC14       PC15       PC16      PC17       PC18      PC19
+[1,]   8.065625  -7.625304  17.780829 -15.896954  9.384408 -16.521827  9.725914
+[2,]  12.435986   9.330297  -0.983499  -2.050586 -4.041821   3.327812 -3.258862
+[3,]  -7.616636   2.290544 -12.940190   9.447282 -5.313112  23.131928 -5.264916
+[4,]   5.042332   1.415422  -2.271339  -5.753623 -2.222519  -8.716797  2.959627
+[5,] -10.940979  -7.698347 -10.052551  -1.183517  2.290533  -5.174199  9.528333
+[6,] -19.023670 -22.473899  -2.779093  20.978597  0.187937  19.896049 -2.473355
+            PC20      PC21        PC22      PC23      PC24       PC25      PC26
+[1,] -0.04840743 -3.227863  -2.1054847  6.507489 -5.407158 -11.015748  7.068554
+[2,]  4.54568364  5.882617   0.5820309 -3.729611  2.068195   1.126410  1.784038
+[3,] 22.40634988 -4.458176 -11.4497450 -6.176187  5.400873  13.084797  7.081396
+[4,]  4.59894640  9.046779  -3.4384166 -7.414953  4.343250  -9.506725 -2.438240
+[5,] -6.42818070  3.384217   4.3091014  3.091882 -1.630359   2.985290 -2.092843
+[6,] -6.42049436 -6.875957 -14.1028115 -7.154210 17.248034 -22.615048 -7.776256
+           PC27         PC28      PC29        PC30       PC31        PC32
+[1,]  15.803319 -12.99735395 -9.774354  -6.2496645  0.7153194  19.1242605
+[2,] -20.528942   8.40391702  5.254189   1.8685198  1.4565640  -1.9585768
+[3,]  -7.236746   0.02402719 -7.463896  -2.5320944  3.5032703  19.5894349
+[4,]  -4.899083  -1.64305057  0.404906  -6.9102340  9.2215974  -0.5233995
+[5,]  -1.262694  -4.06810302  1.972358 -14.8474575 -6.9268371  -5.1466930
+[6,]  -1.828134   1.02947944 -8.935408  -0.4962449 -5.6966947 -23.8716384
+           PC33        PC34        PC35      PC36      PC37       PC38
+[1,]   2.261696  -4.8968878 -23.7439618  6.464699  8.570620   1.149695
+[2,] -15.772453  -0.5519424   5.6548824 -8.110667  8.137942  -4.362064
+[3,]  -7.659188 -15.7607164   6.1454675 -8.367113 16.394797 -11.546098
+[4,]  -4.725612   6.6096862  -2.5900378  4.068035 -4.494310  11.172975
+[5,]   1.204525  -9.7568547   0.1174676  1.168798  6.552890   9.011521
+[6,]  -7.342273 -13.1740798 -11.4070659 -7.122469  8.660791   1.202306
+           PC39      PC40       PC41      PC42       PC43       PC44      PC45
+[1,]  3.1886528  1.682007 11.2446398 -5.406263 -11.521887   8.107999  2.260701
+[2,] -9.3337302  2.599240  1.1639296  6.464775   9.626615 -10.941004 -4.845390
+[3,]  2.9670505 15.790428  0.8708243  5.085842  -5.868696  -8.546265  3.521008
+[4,]  4.7606989  9.547962 -6.9167083 -7.687287  -3.255654  -2.680568  8.750389
+[5,] -0.9671194  5.265683  0.7574683  3.745006  -2.057836   5.504790 -4.202319
+[6,] -8.5686595 -5.074964  2.9690070 -1.734844  -5.167834   8.350052 15.304356
+           PC46       PC47       PC48        PC49        PC50      PC51
+[1,]  2.1453939  5.1827126  3.5640921 -19.4155796 -5.06141789 -3.965976
+[2,]  7.2841205 13.0455057  0.8488019  -0.8766941 -2.79232806 10.033954
+[3,] -0.1909426 -9.6902728  1.9088477   1.6273289 -9.12656759 -7.255388
+[4,] -7.1175920 -2.7977530  1.6172867  -1.1820230 -0.06247949  2.605286
+[5,]  3.2814329 -0.1891045  5.4753626  -0.3313350 -9.63133345  6.856462
+[6,]  1.5283949  0.8082520 -5.4740963  -4.6011245 -3.95266779 -4.215938
+           PC52        PC53       PC54      PC55      PC56        PC57
+[1,] -8.1051638 -2.33396478  -4.931716  5.713546 11.898004  2.58502937
+[2,] -2.7755397  8.44107484  22.410652 13.869112  5.396367 -9.15591754
+[3,]  1.0426573  1.13118503 -13.087994  2.326126  2.301458  1.58360904
+[4,]  7.8236013  7.97536235  -5.917260 -4.663630 -4.560918 -5.76974089
+[5,] -5.4890868  0.09864252  10.051759  5.309647 -3.156255 17.53035320
+[6,]  0.3599914 -1.18246439   6.486186 -8.259916 -1.081562 -0.03892571
+           PC58       PC59      PC60       PC61       PC62       PC63
+[1,]  1.1872165 -3.3112076 -1.880974 -3.0197526  -6.995660  2.6923062
+[2,]  4.9968136 -7.0720675 -7.295410  0.7409896 -14.343214  4.6588409
+[3,]  0.8957102 -2.1815922  6.035222  8.0830075   3.827077  6.9280194
+[4,] -3.7783574  3.4909375  6.847148 -1.1197641  -6.362019 -0.2022859
+[5,]  1.8592311  0.9777086  9.971014 -2.7439268   1.381704 -8.7619969
+[6,]  0.5084336 -0.9611797  8.852517  4.5881294  -9.869942 -5.0528052
+           PC64       PC65        PC66      PC67       PC68      PC69      PC70
+[1,]  0.6019493  6.6881767  0.24783870 -6.589838 -3.6975751 -4.969444  5.395488
+[2,]  0.6230142 14.4267655 -9.06369413  3.181551  0.1850699 -1.436119  2.496899
+[3,]  0.8679686 -5.6596987 -3.46923017 -1.221796 -2.3788956  4.431626  4.495949
+[4,] -7.4633037  2.5511017  5.98706473 13.435139 -1.0057314  2.591845 14.091049
+[5,]  1.6087786 -0.2908433 -3.23228484 11.131222 -3.3359907 18.565348 -0.839089
+[6,] -0.6248591  2.5313056  0.09442093 -5.334097  0.5372130 -3.667100  2.192576
+           PC71      PC72       PC73       PC74      PC75       PC76
+[1,]   2.255635  2.048860 -5.6096867  4.2300701 -2.017245  1.6640209
+[2,]  -2.614254  4.092757 -3.1379443 -1.5912604 -2.294963 -0.8015786
+[3,]   1.229239  4.635150 -1.5446281 -1.2585501  0.127976  1.5271015
+[4,] -14.751050 15.978752 -2.7309803 14.5290753  9.419289 -6.5803273
+[5,]  16.360210  1.840789 -3.0154129 -3.4188369 13.248472 -4.8498169
+[6,]  -2.267182 -0.130598  0.8853297 -0.4949213 -3.100105 -1.6163917
+              PC77
+[1,]  1.329817e-14
+[2,] -4.026337e-14
+[3,]  3.418229e-14
+[4,]  1.542798e-14
+[5,] -1.659133e-14
+[6,]  2.868224e-14</code></pre>
+</div>
+</div>
+<p>Now, we are plotting the 15 proteins that contribute the most to the first two PCs to observe the direction and the overall contribution of the variables in the PCs.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb15"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a>propve <span class="ot">&lt;-</span> pca_res<span class="sc">$</span>sdev<span class="sc">^</span><span class="dv">2</span> <span class="sc">/</span> <span class="fu">sum</span>(pca_res<span class="sc">$</span>sdev<span class="sc">^</span><span class="dv">2</span>)</span>
+<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a><span class="fu">fviz_pca_var</span>(pca_res, <span class="at">select.var =</span> <span class="fu">list</span>(<span class="at">contrib =</span> <span class="dv">15</span>), <span class="at">repel =</span> <span class="cn">TRUE</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="05_analysis_1_files/figure-html/unnamed-chunk-6-1.svg" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+</div>
+<p>Finally, we are making a scatterplot colored by subtype to help us answer the project question do tumors belonging to the same subtype share proteins? If the subtypes properly separate, then we could argue that proteins seem to distinguish the subtypes; whereas if they’re all scattered, then the proteins aren’t enough to do so. Also, the groups that are placed closer to one another will have similar profiles.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb16"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a>pca_scores <span class="ot">&lt;-</span> pca_res<span class="sc">$</span>x <span class="sc">|&gt;</span> </span>
+<span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">as_tibble</span>() <span class="sc">|&gt;</span> </span>
+<span id="cb16-3"><a href="#cb16-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">bind_cols</span>(pca_wide <span class="sc">|&gt;</span> </span>
+<span id="cb16-4"><a href="#cb16-4" aria-hidden="true" tabindex="-1"></a>              <span class="fu">select</span>(patient_id, subtype))</span>
+<span id="cb16-5"><a href="#cb16-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb16-6"><a href="#cb16-6" aria-hidden="true" tabindex="-1"></a>pca_scores <span class="sc">|&gt;</span> </span>
+<span id="cb16-7"><a href="#cb16-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ggplot</span>(<span class="fu">aes</span>(<span class="at">x=</span>PC1, <span class="at">y=</span>PC2, <span class="at">color =</span> subtype)) <span class="sc">+</span></span>
+<span id="cb16-8"><a href="#cb16-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_point</span>(<span class="at">size=</span><span class="dv">3</span>, <span class="at">alpha=</span><span class="fl">0.8</span>) <span class="sc">+</span></span>
+<span id="cb16-9"><a href="#cb16-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">x =</span> <span class="fu">str_c</span>(<span class="st">"PC1("</span>, <span class="fu">round</span>(propve[<span class="dv">1</span>]<span class="sc">*</span><span class="dv">100</span>, <span class="dv">1</span>), <span class="st">"%)"</span>),</span>
+<span id="cb16-10"><a href="#cb16-10" aria-hidden="true" tabindex="-1"></a>       <span class="at">y =</span> <span class="fu">str_c</span>(<span class="st">"PC2("</span>, <span class="fu">round</span>(propve[<span class="dv">2</span>]<span class="sc">*</span><span class="dv">100</span> , <span class="dv">1</span>), <span class="st">"%)"</span>),</span>
+<span id="cb16-11"><a href="#cb16-11" aria-hidden="true" tabindex="-1"></a>       <span class="at">colour =</span><span class="st">"PAM50 subtype"</span>)<span class="sc">+</span></span>
+<span id="cb16-12"><a href="#cb16-12" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme_minimal</span>()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="05_analysis_1_files/figure-html/unnamed-chunk-7-1.svg" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+</div>
+</section>
+<section id="k-means" class="level2">
+<h2 class="anchored" data-anchor-id="k-means">K-means</h2>
+<p>Now, we will carry out k-means clustering (with and without PAM50) as a way to further support the answer we obtain after Principal Component Analysis. Right now, we have the PCA scatterplot, which helps us visually observe whether the subtypes are separated properly given their protein profiles, but a K-means will help us back up any conclusion with more numbers. Also, we will carry out different iterates with different number of clusters to compare their silhouette scores. Once again, this is based on a GeeksForGeeks tutorial.</p>
+<p>Slight preprocessing to split the protein columns (with and without PAM50).</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb17"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a>pam50_ids <span class="ot">&lt;-</span> <span class="fu">read_csv</span>(<span class="st">"../data/_raw/PAM50_proteins.csv"</span>, <span class="at">show_col_types =</span> <span class="cn">FALSE</span>) <span class="sc">|&gt;</span> </span>
+<span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">pull</span>(RefSeqProteinID)</span>
+<span id="cb17-3"><a href="#cb17-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb17-4"><a href="#cb17-4" aria-hidden="true" tabindex="-1"></a>pam50_only <span class="ot">&lt;-</span> pca_wide <span class="sc">|&gt;</span> </span>
+<span id="cb17-5"><a href="#cb17-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(<span class="fu">any_of</span>(pam50_ids))</span>
+<span id="cb17-6"><a href="#cb17-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb17-7"><a href="#cb17-7" aria-hidden="true" tabindex="-1"></a>no_pam50 <span class="ot">&lt;-</span> pca_wide <span class="sc">|&gt;</span> </span>
+<span id="cb17-8"><a href="#cb17-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(<span class="sc">-</span>patient_id, <span class="sc">-</span>subtype, <span class="sc">-</span><span class="fu">any_of</span>(pam50_ids))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<p><strong>Check to see how many proteins survided after the NA filter</strong></p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb18"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a><span class="fu">ncol</span>(pam50_only)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] 26</code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb20"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a><span class="fu">ncol</span>(no_pam50)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] 7974</code></pre>
+</div>
+</div>
+<p>Cluster number comparison with silhouette scores.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb22"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a>cluster_scores <span class="ot">&lt;-</span> <span class="cf">function</span>(mat, <span class="at">k_values=</span><span class="dv">2</span><span class="sc">:</span><span class="dv">8</span>){</span>
+<span id="cb22-2"><a href="#cb22-2" aria-hidden="true" tabindex="-1"></a>  d <span class="ot">&lt;-</span> <span class="fu">dist</span>(mat)</span>
+<span id="cb22-3"><a href="#cb22-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">tibble</span>(<span class="at">k=</span>k_values) <span class="sc">|&gt;</span> </span>
+<span id="cb22-4"><a href="#cb22-4" aria-hidden="true" tabindex="-1"></a>    <span class="fu">mutate</span>(<span class="at">km =</span> <span class="fu">map</span>(k, \(k) <span class="fu">kmeans</span>(mat, <span class="at">centers =</span> k, <span class="at">nstart=</span><span class="dv">25</span>)),</span>
+<span id="cb22-5"><a href="#cb22-5" aria-hidden="true" tabindex="-1"></a>           <span class="at">sil =</span> <span class="fu">map_dbl</span>(km, \(m) <span class="fu">mean</span>(<span class="fu">silhouette</span>(m<span class="sc">$</span>cluster, d)[, <span class="dv">3</span>]))) <span class="sc">|&gt;</span> </span>
+<span id="cb22-6"><a href="#cb22-6" aria-hidden="true" tabindex="-1"></a>             <span class="fu">select</span>(k, sil)</span>
+<span id="cb22-7"><a href="#cb22-7" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb23"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a><span class="fu">set.seed</span>(<span class="dv">42</span>) <span class="co">#ensuring reproducibility</span></span>
+<span id="cb23-2"><a href="#cb23-2" aria-hidden="true" tabindex="-1"></a>scores <span class="ot">&lt;-</span> <span class="fu">bind_rows</span>(<span class="fu">cluster_scores</span>(pam50_only) <span class="sc">|&gt;</span> </span>
+<span id="cb23-3"><a href="#cb23-3" aria-hidden="true" tabindex="-1"></a>                      <span class="fu">mutate</span>(<span class="at">set=</span><span class="st">"PAM50 only"</span>),</span>
+<span id="cb23-4"><a href="#cb23-4" aria-hidden="true" tabindex="-1"></a>                    <span class="fu">cluster_scores</span>(no_pam50) <span class="sc">|&gt;</span> </span>
+<span id="cb23-5"><a href="#cb23-5" aria-hidden="true" tabindex="-1"></a>                      <span class="fu">mutate</span>(<span class="at">set=</span><span class="st">"No PAM50"</span>)</span>
+<span id="cb23-6"><a href="#cb23-6" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb24"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb24-1"><a href="#cb24-1" aria-hidden="true" tabindex="-1"></a>scores <span class="sc">|&gt;</span> </span>
+<span id="cb24-2"><a href="#cb24-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ggplot</span>(<span class="fu">aes</span>(<span class="at">x=</span>k, <span class="at">y =</span> sil)) <span class="sc">+</span></span>
+<span id="cb24-3"><a href="#cb24-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_line</span>() <span class="sc">+</span></span>
+<span id="cb24-4"><a href="#cb24-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_point</span>() <span class="sc">+</span></span>
+<span id="cb24-5"><a href="#cb24-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">facet_wrap</span>(<span class="sc">~</span> set)<span class="sc">+</span></span>
+<span id="cb24-6"><a href="#cb24-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">x=</span><span class="st">"Number of clusters (k)"</span>,</span>
+<span id="cb24-7"><a href="#cb24-7" aria-hidden="true" tabindex="-1"></a>       <span class="at">y =</span> <span class="st">"Silhouette score"</span>) <span class="sc">+</span></span>
+<span id="cb24-8"><a href="#cb24-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme_minimal</span>()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="05_analysis_1_files/figure-html/unnamed-chunk-12-1.svg" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+</div>
+<p>Now, we set the optimal k for each set by looking at the plots.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb25"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb25-1"><a href="#cb25-1" aria-hidden="true" tabindex="-1"></a>k_pam50 <span class="ot">&lt;-</span> <span class="dv">4</span> <span class="co">#MUST BE CHANGED AFTER WHATEVER WE OBSERVE IN THE GRAPHS</span></span>
+<span id="cb25-2"><a href="#cb25-2" aria-hidden="true" tabindex="-1"></a>k_nopam50 <span class="ot">&lt;-</span> <span class="dv">4</span> <span class="co">#SAME THING</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<p>Finally, we can carry out the k-means clustering.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb26"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb26-1"><a href="#cb26-1" aria-hidden="true" tabindex="-1"></a><span class="fu">set.seed</span>(<span class="dv">42</span>)</span>
+<span id="cb26-2"><a href="#cb26-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb26-3"><a href="#cb26-3" aria-hidden="true" tabindex="-1"></a>km_pam50 <span class="ot">&lt;-</span> <span class="fu">kmeans</span>(pam50_only, <span class="at">centers =</span> k_pam50, <span class="at">nstart =</span> <span class="dv">20</span>)</span>
+<span id="cb26-4"><a href="#cb26-4" aria-hidden="true" tabindex="-1"></a>km_nopam50 <span class="ot">&lt;-</span> <span class="fu">kmeans</span>(no_pam50, <span class="at">centers =</span> k_nopam50, <span class="at">nstart =</span> <span class="dv">20</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<p>We can compare the clusters we obtained with the known subtypes.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb27"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb27-1"><a href="#cb27-1" aria-hidden="true" tabindex="-1"></a><span class="fu">table</span>(pca_wide<span class="sc">$</span>subtype, km_pam50<span class="sc">$</span>cluster)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>               
+                 1  2  3  4
+  Basal-like     0  0  1 17
+  HER2-enriched  0  9  2  1
+  Luminal A     10  2 10  1
+  Luminal B      9 10  5  0</code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb29"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb29-1"><a href="#cb29-1" aria-hidden="true" tabindex="-1"></a><span class="fu">table</span>(pca_wide<span class="sc">$</span>subtype, km_nopam50<span class="sc">$</span>cluster)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>               
+                 1  2  3  4
+  Basal-like     0 13  0  5
+  HER2-enriched  3  3  5  1
+  Luminal A     10  2  3  8
+  Luminal B     13  4  5  2</code></pre>
+</div>
+</div>
+<p>The next chunks will help us visualize the cluster plots. It is important to mention that this plot will combine both the PC scores together with the results obtained by K-Means.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb31"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb31-1"><a href="#cb31-1" aria-hidden="true" tabindex="-1"></a>pca_kmeans <span class="ot">&lt;-</span> pca_scores <span class="sc">|&gt;</span> </span>
+<span id="cb31-2"><a href="#cb31-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">cluster_pam50 =</span> <span class="fu">factor</span>(km_pam50<span class="sc">$</span>cluster),</span>
+<span id="cb31-3"><a href="#cb31-3" aria-hidden="true" tabindex="-1"></a>         <span class="at">cluster_nopam50 =</span> <span class="fu">factor</span>(km_nopam50<span class="sc">$</span>cluster))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb32"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb32-1"><a href="#cb32-1" aria-hidden="true" tabindex="-1"></a><span class="co">#Clusters from the PAM50 proteins</span></span>
+<span id="cb32-2"><a href="#cb32-2" aria-hidden="true" tabindex="-1"></a>pca_kmeans <span class="sc">|&gt;</span> </span>
+<span id="cb32-3"><a href="#cb32-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ggplot</span>(<span class="fu">aes</span>(<span class="at">x=</span>PC1, <span class="at">y =</span> PC2, <span class="at">color =</span> cluster_pam50, <span class="at">shape =</span> subtype)) <span class="sc">+</span></span>
+<span id="cb32-4"><a href="#cb32-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_point</span>(<span class="at">size =</span> <span class="dv">3</span>, <span class="at">alpha =</span> <span class="fl">0.8</span>)<span class="sc">+</span></span>
+<span id="cb32-5"><a href="#cb32-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">stat_ellipse</span>(<span class="fu">aes</span>(<span class="at">group =</span> cluster_pam50))<span class="sc">+</span></span>
+<span id="cb32-6"><a href="#cb32-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">x=</span><span class="fu">str_c</span>(<span class="st">"PC1("</span>, <span class="fu">round</span>(propve[<span class="dv">1</span>]<span class="sc">*</span><span class="dv">100</span>, <span class="dv">1</span>), <span class="st">"%)"</span>),</span>
+<span id="cb32-7"><a href="#cb32-7" aria-hidden="true" tabindex="-1"></a>       <span class="at">y =</span> <span class="fu">str_c</span>(<span class="st">"PC2("</span>, <span class="fu">round</span>(propve[<span class="dv">2</span>]<span class="sc">*</span><span class="dv">100</span>, <span class="dv">1</span>), <span class="st">"%)"</span>),</span>
+<span id="cb32-8"><a href="#cb32-8" aria-hidden="true" tabindex="-1"></a>       <span class="at">color =</span> <span class="st">"K-means (PAM50 proteins)"</span>, </span>
+<span id="cb32-9"><a href="#cb32-9" aria-hidden="true" tabindex="-1"></a>       <span class="at">shape =</span> <span class="st">"PAM50 subtype"</span>) <span class="sc">+</span></span>
+<span id="cb32-10"><a href="#cb32-10" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme_minimal</span>()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stderr">
+<pre><code>Warning: The following aesthetics were dropped during statistical transformation: shape.
+ℹ This can happen when ggplot fails to infer the correct grouping structure in
+  the data.
+ℹ Did you forget to specify a `group` aesthetic or to convert a numerical
+  variable into a factor?</code></pre>
+</div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="05_analysis_1_files/figure-html/unnamed-chunk-17-1.svg" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+</div>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb34"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb34-1"><a href="#cb34-1" aria-hidden="true" tabindex="-1"></a><span class="co">#Clusters for the rest of the proteome (i.e. minus PAM50)</span></span>
+<span id="cb34-2"><a href="#cb34-2" aria-hidden="true" tabindex="-1"></a>pca_kmeans <span class="sc">|&gt;</span> </span>
+<span id="cb34-3"><a href="#cb34-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ggplot</span>(<span class="fu">aes</span>(<span class="at">x=</span>PC1, <span class="at">y =</span> PC2, <span class="at">color =</span> cluster_nopam50, <span class="at">shape =</span> subtype)) <span class="sc">+</span></span>
+<span id="cb34-4"><a href="#cb34-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_point</span>(<span class="at">size =</span> <span class="dv">3</span>, <span class="at">alpha =</span> <span class="fl">0.8</span>)<span class="sc">+</span></span>
+<span id="cb34-5"><a href="#cb34-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">stat_ellipse</span>(<span class="fu">aes</span>(<span class="at">group =</span> cluster_nopam50))<span class="sc">+</span></span>
+<span id="cb34-6"><a href="#cb34-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">x=</span><span class="fu">str_c</span>(<span class="st">"PC1("</span>, <span class="fu">round</span>(propve[<span class="dv">1</span>]<span class="sc">*</span><span class="dv">100</span>, <span class="dv">1</span>), <span class="st">"%)"</span>),</span>
+<span id="cb34-7"><a href="#cb34-7" aria-hidden="true" tabindex="-1"></a>       <span class="at">y =</span> <span class="fu">str_c</span>(<span class="st">"PC2("</span>, <span class="fu">round</span>(propve[<span class="dv">2</span>]<span class="sc">*</span><span class="dv">100</span>, <span class="dv">1</span>), <span class="st">"%)"</span>),</span>
+<span id="cb34-8"><a href="#cb34-8" aria-hidden="true" tabindex="-1"></a>       <span class="at">color =</span> <span class="st">"K-means (without PAM50)"</span>, </span>
+<span id="cb34-9"><a href="#cb34-9" aria-hidden="true" tabindex="-1"></a>       <span class="at">shape =</span> <span class="st">"PAM50 subtype"</span>) <span class="sc">+</span></span>
+<span id="cb34-10"><a href="#cb34-10" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme_minimal</span>()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stderr">
+<pre><code>Warning: The following aesthetics were dropped during statistical transformation: shape.
+ℹ This can happen when ggplot fails to infer the correct grouping structure in
+  the data.
+ℹ Did you forget to specify a `group` aesthetic or to convert a numerical
+  variable into a factor?</code></pre>
+</div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="05_analysis_1_files/figure-html/unnamed-chunk-18-1.svg" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+</div>
+</section>
+<section id="references" class="level2">
+<h2 class="anchored" data-anchor-id="references">References:</h2>
+<ul>
+<li>GeeksForGeeks. (2026). <em>Principal Component Analysis with R Programming.</em> Retrieved from: <a href="https://www.geeksforgeeks.org/r-language/principal-component-analysis-with-r-programming/" class="uri">https://www.geeksforgeeks.org/r-language/principal-component-analysis-with-r-programming/</a></li>
+<li>GeeksForGeeks. (2025). <em>K-Means Clustering in R Programming.</em> Retrieved from: <a href="https://www.geeksforgeeks.org/r-language/k-means-clustering-in-r-programming/" class="uri">https://www.geeksforgeeks.org/r-language/k-means-clustering-in-r-programming/</a></li>
+</ul>
+</section>
+</section>
+
+</main>
+<!-- /main column -->
+<script id="quarto-html-after-body" type="application/javascript">
+  window.document.addEventListener("DOMContentLoaded", function (event) {
+    const icon = "";
+    const anchorJS = new window.AnchorJS();
+    anchorJS.options = {
+      placement: 'right',
+      icon: icon
+    };
+    anchorJS.add('.anchored');
+    const isCodeAnnotation = (el) => {
+      for (const clz of el.classList) {
+        if (clz.startsWith('code-annotation-')) {                     
+          return true;
+        }
+      }
+      return false;
+    }
+    const onCopySuccess = function(e) {
+      // button target
+      const button = e.trigger;
+      // don't keep focus
+      button.blur();
+      // flash "checked"
+      button.classList.add('code-copy-button-checked');
+      var currentTitle = button.getAttribute("title");
+      button.setAttribute("title", "Copied!");
+      let tooltip;
+      if (window.bootstrap) {
+        button.setAttribute("data-bs-toggle", "tooltip");
+        button.setAttribute("data-bs-placement", "left");
+        button.setAttribute("data-bs-title", "Copied!");
+        tooltip = new bootstrap.Tooltip(button, 
+          { trigger: "manual", 
+            customClass: "code-copy-button-tooltip",
+            offset: [0, -8]});
+        tooltip.show();    
+      }
+      setTimeout(function() {
+        if (tooltip) {
+          tooltip.hide();
+          button.removeAttribute("data-bs-title");
+          button.removeAttribute("data-bs-toggle");
+          button.removeAttribute("data-bs-placement");
+        }
+        button.setAttribute("title", currentTitle);
+        button.classList.remove('code-copy-button-checked');
+      }, 1000);
+      // clear code selection
+      e.clearSelection();
+    }
+    const getTextToCopy = function(trigger) {
+      const outerScaffold = trigger.parentElement.cloneNode(true);
+      const codeEl = outerScaffold.querySelector('code');
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+    const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+      text: getTextToCopy
+    });
+    clipboard.on('success', onCopySuccess);
+    if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+      const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+        text: getTextToCopy,
+        container: window.document.getElementById('quarto-embedded-source-code-modal')
+      });
+      clipboardModal.on('success', onCopySuccess);
+    }
+      var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+      var mailtoRegex = new RegExp(/^mailto:/);
+        var filterRegex = new RegExp('/' + window.location.host + '/');
+      var isInternal = (href) => {
+          return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+      }
+      // Inspect non-navigation links and adorn them if external
+     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      for (var i=0; i<links.length; i++) {
+        const link = links[i];
+        if (!isInternal(link.href)) {
+          // undo the damage that might have been done by quarto-nav.js in the case of
+          // links that we want to consider external
+          if (link.dataset.originalHref !== undefined) {
+            link.href = link.dataset.originalHref;
+          }
+        }
+      }
+    function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+      const config = {
+        allowHTML: true,
+        maxWidth: 500,
+        delay: 100,
+        arrow: false,
+        appendTo: function(el) {
+            return el.parentElement;
+        },
+        interactive: true,
+        interactiveBorder: 10,
+        theme: 'quarto',
+        placement: 'bottom-start',
+      };
+      if (contentFn) {
+        config.content = contentFn;
+      }
+      if (onTriggerFn) {
+        config.onTrigger = onTriggerFn;
+      }
+      if (onUntriggerFn) {
+        config.onUntrigger = onUntriggerFn;
+      }
+      window.tippy(el, config); 
+    }
+    const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+    for (var i=0; i<noterefs.length; i++) {
+      const ref = noterefs[i];
+      tippyHover(ref, function() {
+        // use id or data attribute instead here
+        let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+        try { href = new URL(href).hash; } catch {}
+        const id = href.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note) {
+          return note.innerHTML;
+        } else {
+          return "";
+        }
+      });
+    }
+    const xrefs = window.document.querySelectorAll('a.quarto-xref');
+    const processXRef = (id, note) => {
+      // Strip column container classes
+      const stripColumnClz = (el) => {
+        el.classList.remove("page-full", "page-columns");
+        if (el.children) {
+          for (const child of el.children) {
+            stripColumnClz(child);
+          }
+        }
+      }
+      stripColumnClz(note)
+      if (id === null || id.startsWith('sec-')) {
+        // Special case sections, only their first couple elements
+        const container = document.createElement("div");
+        if (note.children && note.children.length > 2) {
+          container.appendChild(note.children[0].cloneNode(true));
+          for (let i = 1; i < note.children.length; i++) {
+            const child = note.children[i];
+            if (child.tagName === "P" && child.innerText === "") {
+              continue;
+            } else {
+              container.appendChild(child.cloneNode(true));
+              break;
+            }
+          }
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(container);
+          }
+          return container.innerHTML
+        } else {
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(note);
+          }
+          return note.innerHTML;
+        }
+      } else {
+        // Remove any anchor links if they are present
+        const anchorLink = note.querySelector('a.anchorjs-link');
+        if (anchorLink) {
+          anchorLink.remove();
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        if (note.classList.contains("callout")) {
+          return note.outerHTML;
+        } else {
+          return note.innerHTML;
+        }
+      }
+    }
+    for (var i=0; i<xrefs.length; i++) {
+      const xref = xrefs[i];
+      tippyHover(xref, undefined, function(instance) {
+        instance.disable();
+        let url = xref.getAttribute('href');
+        let hash = undefined; 
+        if (url.startsWith('#')) {
+          hash = url;
+        } else {
+          try { hash = new URL(url).hash; } catch {}
+        }
+        if (hash) {
+          const id = hash.replace(/^#\/?/, "");
+          const note = window.document.getElementById(id);
+          if (note !== null) {
+            try {
+              const html = processXRef(id, note.cloneNode(true));
+              instance.setContent(html);
+            } finally {
+              instance.enable();
+              instance.show();
+            }
+          } else {
+            // See if we can fetch this
+            fetch(url.split('#')[0])
+            .then(res => res.text())
+            .then(html => {
+              const parser = new DOMParser();
+              const htmlDoc = parser.parseFromString(html, "text/html");
+              const note = htmlDoc.getElementById(id);
+              if (note !== null) {
+                const html = processXRef(id, note);
+                instance.setContent(html);
+              } 
+            }).finally(() => {
+              instance.enable();
+              instance.show();
+            });
+          }
+        } else {
+          // See if we can fetch a full url (with no hash to target)
+          // This is a special case and we should probably do some content thinning / targeting
+          fetch(url)
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.querySelector('main.content');
+            if (note !== null) {
+              // This should only happen for chapter cross references
+              // (since there is no id in the URL)
+              // remove the first header
+              if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+                note.children[0].remove();
+              }
+              const html = processXRef(null, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      }, function(instance) {
+      });
+    }
+        let selectedAnnoteEl;
+        const selectorForAnnotation = ( cell, annotation) => {
+          let cellAttr = 'data-code-cell="' + cell + '"';
+          let lineAttr = 'data-code-annotation="' +  annotation + '"';
+          const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+          return selector;
+        }
+        const selectCodeLines = (annoteEl) => {
+          const doc = window.document;
+          const targetCell = annoteEl.getAttribute("data-target-cell");
+          const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+          const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+          const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+          const lineIds = lines.map((line) => {
+            return targetCell + "-" + line;
+          })
+          let top = null;
+          let height = null;
+          let parent = null;
+          if (lineIds.length > 0) {
+              //compute the position of the single el (top and bottom and make a div)
+              const el = window.document.getElementById(lineIds[0]);
+              top = el.offsetTop;
+              height = el.offsetHeight;
+              parent = el.parentElement.parentElement;
+            if (lineIds.length > 1) {
+              const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+              const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+              height = bottom - top;
+            }
+            if (top !== null && height !== null && parent !== null) {
+              // cook up a div (if necessary) and position it 
+              let div = window.document.getElementById("code-annotation-line-highlight");
+              if (div === null) {
+                div = window.document.createElement("div");
+                div.setAttribute("id", "code-annotation-line-highlight");
+                div.style.position = 'absolute';
+                parent.appendChild(div);
+              }
+              div.style.top = top - 2 + "px";
+              div.style.height = height + 4 + "px";
+              div.style.left = 0;
+              let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+              if (gutterDiv === null) {
+                gutterDiv = window.document.createElement("div");
+                gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+                gutterDiv.style.position = 'absolute';
+                const codeCell = window.document.getElementById(targetCell);
+                const gutter = codeCell.querySelector('.code-annotation-gutter');
+                gutter.appendChild(gutterDiv);
+              }
+              gutterDiv.style.top = top - 2 + "px";
+              gutterDiv.style.height = height + 4 + "px";
+            }
+            selectedAnnoteEl = annoteEl;
+          }
+        };
+        const unselectCodeLines = () => {
+          const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+          elementsIds.forEach((elId) => {
+            const div = window.document.getElementById(elId);
+            if (div) {
+              div.remove();
+            }
+          });
+          selectedAnnoteEl = undefined;
+        };
+          // Handle positioning of the toggle
+      window.addEventListener(
+        "resize",
+        throttle(() => {
+          elRect = undefined;
+          if (selectedAnnoteEl) {
+            selectCodeLines(selectedAnnoteEl);
+          }
+        }, 10)
+      );
+      function throttle(fn, ms) {
+      let throttle = false;
+      let timer;
+        return (...args) => {
+          if(!throttle) { // first call gets through
+              fn.apply(this, args);
+              throttle = true;
+          } else { // all the others get throttled
+              if(timer) clearTimeout(timer); // cancel #2
+              timer = setTimeout(() => {
+                fn.apply(this, args);
+                timer = throttle = false;
+              }, ms);
+          }
+        };
+      }
+        // Attach click handler to the DT
+        const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+        for (const annoteDlNode of annoteDls) {
+          annoteDlNode.addEventListener('click', (event) => {
+            const clickedEl = event.target;
+            if (clickedEl !== selectedAnnoteEl) {
+              unselectCodeLines();
+              const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+              if (activeEl) {
+                activeEl.classList.remove('code-annotation-active');
+              }
+              selectCodeLines(clickedEl);
+              clickedEl.classList.add('code-annotation-active');
+            } else {
+              // Unselect the line
+              unselectCodeLines();
+              clickedEl.classList.remove('code-annotation-active');
+            }
+          });
+        }
+    const findCites = (el) => {
+      const parentEl = el.parentElement;
+      if (parentEl) {
+        const cites = parentEl.dataset.cites;
+        if (cites) {
+          return {
+            el,
+            cites: cites.split(' ')
+          };
+        } else {
+          return findCites(el.parentElement)
+        }
+      } else {
+        return undefined;
+      }
+    };
+    var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+    for (var i=0; i<bibliorefs.length; i++) {
+      const ref = bibliorefs[i];
+      const citeInfo = findCites(ref);
+      if (citeInfo) {
+        tippyHover(citeInfo.el, function() {
+          var popup = window.document.createElement('div');
+          citeInfo.cites.forEach(function(cite) {
+            var citeDiv = window.document.createElement('div');
+            citeDiv.classList.add('hanging-indent');
+            citeDiv.classList.add('csl-entry');
+            var biblioDiv = window.document.getElementById('ref-' + cite);
+            if (biblioDiv) {
+              citeDiv.innerHTML = biblioDiv.innerHTML;
+            }
+            popup.appendChild(citeDiv);
+          });
+          return popup.innerHTML;
+        });
+      }
+    }
+  });
+  </script>
+</div> <!-- /content -->
+
+
+
+
+</body></html>
