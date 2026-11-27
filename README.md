@@ -45,3 +45,5 @@ The '.gitignore' contains the 'data' which should not be uploaded to GitHub.
 Mertins, P., Mani, D., Ruggles, K. et al. "Proteogenomics connects somatic mutations to signalling in breast cancer. Nature 534, 55–62 (2016)"
 https://doi.org/10.1038/nature18003
 
+## AI credits 
+

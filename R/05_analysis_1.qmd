@@ -6,22 +6,19 @@ editor: visual
 
 # Analysis
 
-```{r}
-library("tidyverse")
-library("factoextra")
-library("broom")
-```
-
 ## Principal Component Analysis
 
 ```{r}
-data <- read_tsv("../data/02_dat_augment_all_genes.tsv", 
-                 show_col_types = FALSE)
+library("tidyverse")
+```
 
+Right now we don't have the "clean clean" data per se so the following is a sort of template assuming long format for the data which is why we pivot to wide format. **This may be removed after the data wrangling/cleaning is done, but for now, I'll leave it in case we need it.**
+
+```{r}
 pca_wide <- data |> 
-  filter(`PAM50 mRNA` != "control") |> 
-  rename(subtype =`PAM50 mRNA` ) |> 
-  select(patient_id, subtype, matches("^[NXY]P_"))
+  select(patient_id, subtype, RefSeq_accession_number, log2_ratio) |> 
+  drop_na(subtype) |> 
+  select(where(\(x) !any(is.na(x)))) #This is to keep only proteins without NAs
 ```
 
 Using the GeeksForGeeks PCA tutorial listed in the references, we carry out PCA with centering, scaling, and retx.
@@ -30,142 +27,133 @@ Using the GeeksForGeeks PCA tutorial listed in the references, we carry out PCA 
 pca_res <- pca_wide |> 
   select(-patient_id, -subtype) |> 
   prcomp(scale.=TRUE, center=TRUE, retx=TRUE)
+
+names(pca_res)
 ```
 
 The following two chunks of code will help us observe how much variance is captured by each of the PCs. Then, we will also observe the PC loadings for a couple of proteins.
 
 ```{r}
-pca_res |> 
-  tidy(matrix = "eigenvalues") |> 
-  slice_head(n = 10)
+summary(pca_res)
 ```
 
 ```{r}
-pca_res |>
-  tidy(matrix = "loadings") |> 
-  filter(PC<=4) |> 
-  pivot_wider(names_from = PC, names_prefix = "PC", values_from =value) |> 
-  slice_head(n=5)
+pca_res$rotation[1:5, 1:4] #This is for the first 5 proteins and first 4 PCs. 
+head(pca_res$x)
 ```
 
-Now, we are plotting the 15 proteins that contribute the most to the first two PCs to observe the direction and the overall contribution of the variables in the PCs.
+Now, we are creating a biplot to observe the direction and the overall contribution of the variables in the PCs.
 
 ```{r}
-
-pc_var <- pca_res |> 
-  tidy(matrix = "eigenvalues") |> 
-  mutate(label=str_c("PC", PC, "(", round(percent*100, 1), "%)"))
-
-#now we extract the labels avoiding base r!
-pc1_label <- pc_var |> 
-  filter(PC==1) |> 
-  pull(label)
-pc2_label <- pc_var |> 
-  filter(PC==2) |> 
-  pull(label)
-
-fviz_pca_var(pca_res, select.var = list(contrib = 15), repel = TRUE)
+biplot(pca_res, main="Biplot of the Principal Components", scale=0)
 ```
 
 Finally, we are making a scatterplot colored by subtype to help us answer the project question do tumors belonging to the same subtype share proteins? If the subtypes properly separate, then we could argue that proteins seem to distinguish the subtypes; whereas if they're all scattered, then the proteins aren't enough to do so. Also, the groups that are placed closer to one another will have similar profiles.
 
 ```{r}
 pca_scores <- pca_res |> 
-  augment(data = pca_wide) |> 
-  rename_with(\(x) str_remove(x, "\\.fitted"), starts_with(".fitted")) |> 
-  select(patient_id, subtype, starts_with("PC"))
+  as_tibble() |> 
+  bind_cols(pca_wide |> 
+              select(patien_id, subtype))
 
 pca_scores |> 
   ggplot(aes(x=PC1, y=PC2, color = subtype)) +
   geom_point(size=3, alpha=0.8) +
-  labs(title = "PCA of breast tumor proteomes", 
-       x = pc1_label,
-       y = pc2_label,
+  labs(x = str_c("PC1(", round(propve[1]*100, 1), "%)"),
+       y = str_c("PC2(", round(propve[2]*100 , 1), "%)"),
        colour ="PAM50 subtype")+
   theme_minimal()
 ```
 
 ## K-means
 
-Now, we will carry out k-means clustering (with and without PAM50) as a way to further support the answer we obtain after Principal Component Analysis. Right now, we have the PCA scatterplot, which helps us visually observe whether the subtypes are separated properly given their protein profiles, but a K-means will help us back up any conclusion with more numbers. Once again, this is based on a GeeksForGeeks tutorial.
+Now, we will carry out k-means clustering (with and without PAM50) as a way to further support the answer we obtain after Principal Component Analysis. Right now, we have the PCA scatterplot, which helps us visually observe whether the subtypes are separated properly given their protein profiles, but a K-means will help us back up any conclusion with more numbers. Also, we will carry out different iterates with different number of clusters to compare their silhouette scores. Once again, this is based on a GeeksForGeeks tutorial.
+
+```{r}
+library("factoextra")
+library("cluster")
+```
 
 Slight preprocessing to split the protein columns (with and without PAM50).
 
 ```{r}
-pam50_ids <- read_csv("../data/_raw/PAM50_proteins.csv",
-                      show_col_types = FALSE) |> 
-  pull(RefSeqProteinID)
+pam50_ids <- pam50 |> 
+  pull(RefSeq_accession_number)
 
 pam50_only <- pca_wide |> 
   select(any_of(pam50_ids))
 
 no_pam50 <- pca_wide |> 
-  select(-patient_id, -subtype, -any_of(pam50_ids))
+  select(-patient_id, -subtype, -any_of(pam50__ids))
 ```
 
-**Check to see how many proteins survived after the NA filter**
+**Check to see how many proteins survided after the NA filter**
 
 ```{r}
 ncol(pam50_only)
 ncol(no_pam50)
 ```
 
-Finally, we can carry out the k-means clustering. We are using k=4 to match the four PAM50 subtypes.
+Cluster number comparison with an elbow graph.
+
+```{r}
+cluster_scores <- function(mat, k_values=2:8){
+  d <- dist(mat)
+  tibble(k=k_values) |> 
+    mutate(km = map(k, \(k) kmeans(mat, centers = k, nstart=25)),
+           sil = map_dbl(km, \(m) mean(silhouette(m$cluster, d)[, 3]))) |> 
+             select(k, sil)
+}
+```
+
+```{r}
+set.seed(42) #ensuring reproducibility
+scores <- bind_rows(cluster_scores(pam50_only) |> 
+                      mutate(set="PAM50 only"),
+                    cluster_scores(no_pam50) |> 
+                      mutate(set="No PAM50")
+)
+```
+
+```{r}
+scores |> 
+  ggplot(aes(x=k, y = sil)) +
+  geom_line() +
+  geom_point() +
+  facet_wrap(~ set)+
+  labs(x="Number of clusters (k)",
+       y = "Silhouette score") +
+  theme_minimal()
+```
+
+Now, we set the optimal k for each set by looking at the plots.
+
+```{r}
+k_pam50 <- 4 #MUST BE CHANGED AFTER WHATEVER WE OBSERVE IN THE GRAPHS
+k_nopam50 <- 4 #SAME THING
+```
+
+Finally, we can carry out the k-means clustering.
 
 ```{r}
 set.seed(42)
 
-km_pam50 <- kmeans(pam50_only, centers = 4, nstart = 20)
-km_nopam50 <- kmeans(no_pam50, centers = 4, nstart = 20)
+km_pam50 <- kmeans(pam50_only, centers = k_pam50, nstart = 20)
+km_nopam50 <- kmeans(no_pam50, centers = k_nopam50, nstart = 20)
 ```
 
-We can compare the clusters we obtained with the known subtypes. The next chunks will help us visualize the cluster plots. It is important to mention that this plot will combine both the PC scores together with the results obtained by K-Means.
+We can compare the clusters we obtained with the known subtypes.
 
 ```{r}
-pca_kmeans <- pca_scores |> 
-  bind_cols(augment(km_pam50, pam50_only) |> 
-      select(cluster_pam50 = .cluster),
-      augment(km_nopam50, no_pam50) |> 
-      select(cluster_nopam50 = .cluster))
+table(pca_wide$subtype, km_pam50$cluster)
+table(pca_wide$subtype, km_nopam50$cluster)
 ```
 
-```{r}
-pca_kmeans |> 
-  count(subtype, cluster_pam50) |> 
-  pivot_wider(names_from = cluster_pam50, values_from = n, values_fill = 0)
-
-
-pca_kmeans |> 
-  count(subtype, cluster_nopam50) |> 
-  pivot_wider(names_from = cluster_nopam50, values_from = n, values_fill = 0)
-```
+The next chunk will help us visualize the cluster plots
 
 ```{r}
-#Clusters from the PAM50 proteins
-pca_kmeans |> 
-  ggplot(aes(x=PC1, y = PC2, color = cluster_pam50, shape = subtype)) +
-  geom_point(size = 3, alpha = 0.8)+
-  stat_ellipse(aes(group = cluster_pam50))+
-  labs(title = "K-means clusters with PAM50 proteins",
-       x=pc1_label,
-       y = pc2_label,
-       color = "K-means (PAM50 proteins)", 
-       shape = "PAM50 subtype") +
-  theme_minimal()
-```
-
-```{r}
-#Clusters for the rest of the proteome (i.e. minus PAM50)
-pca_kmeans |> 
-  ggplot(aes(x=PC1, y = PC2, color = cluster_nopam50, shape = subtype)) +
-  geom_point(size = 3, alpha = 0.8)+
-  stat_ellipse(aes(group = cluster_nopam50))+
-  labs(title="K-means clusters without PAM50",
-       x=pc1_label,
-       y = pc2_label,
-       color = "K-means (without PAM50)", 
-       shape = "PAM50 subtype") +
-  theme_minimal()
+fviz_cluster(km_pam50, data=pam50_only, main = "K-Means: PAM50 proteins")
+fviz_cluster(km_nopam50, data = no_pam50, main ="K-Means: without PAM50 proteins")
 ```
 
 ## References:

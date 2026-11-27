@@ -4,6 +4,8 @@ format: html
 editor:
   visual
 ---
+<<<<<<< HEAD
+=======
 
 #### placeholder
 
@@ -18,3 +20,4 @@ for (f in qmds) quarto::quarto_render(f)
 htmls <- list.files("results/R", pattern = "\\.html$", full.names = TRUE)
 file.rename(htmls, file.path("results", basename(htmls)))
 ```
+>>>>>>> f653ccdf4505b779219b4a22dcca7a06a18f7c02

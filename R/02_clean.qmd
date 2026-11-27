@@ -4,6 +4,7 @@ format: html
 editor: visual
 ---
 
+
 ### Load packages
 
 ```{r}
@@ -13,9 +14,11 @@ source("99_my_transpose.R")
 
 ### Loading output data from 01_load
 
+
+
 ```{r, warning=FALSE}
 # Load datasets into environment
-data_path <- "../data/"
+data_path = "../data/"
 
 pam50 <- read_tsv(str_c(data_path, "01_dat_load_pam50.tsv"),
                            show_col_types = FALSE)
@@ -81,8 +84,6 @@ proteomes_dupmean <- proteomes |>
   # Calculate the average log2_ratio for all the groups (duplicates). If one of the replicate contains NA use the other value
   summarise(log2_ratio = mean(log2_ratio, na.rm = TRUE),
             .groups = "drop") |> 
-  
-  # Some of the groups include all NAN values
   
   # Pivot wide to get ID's back as columns
   pivot_wider(names_from = ID,
@@ -188,8 +189,11 @@ head(all_genes_without_NA)
 ### Save the final tibbles as tsv files in the data folder
 
 ```{r}
-write_tsv(pam50_filtered_without_NA, 
-          file = str_c(data_path, "02_dat_clean_pam50_filtered.tsv"))
-write_tsv(all_genes_without_NA, 
-          file = str_c(data_path, "02_dat_clean_all_genes.tsv"))
+write_tsv(x = pam50_filtered_without_NA, 
+          file = str_c(data_path, "02_dat_clean_pam50_filtered_without_NA.tsv"))
+```
+
+```{r}
+write_tsv(x = all_genes_without_NA, 
+          file = str_c(data_path, "02_dat_clean_all_genes_without_NA.tsv"))
 ```
