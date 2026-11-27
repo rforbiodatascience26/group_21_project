@@ -6,16 +6,11 @@ The main goal is to explore protein expression across different subtypes of brea
 Is proteomics better than PAM50 at clustering cancer? Do the protein expression profiles associated with breast cancer subtypes correspond to those expected by the PAM50 signature?
 
 ## Project Contributors
-Student ID:  s264037\
-GitHub Username:  EmilSommerBennetzen2
-Student ID:  s206178\
-GitHub Username:  BerB
-Student ID:  s261697\
-GitHub Username:  mahuizg
-Student ID:  s261782\
-GitHub Username:  mathilde-picard
-Student ID:  s264038\
-GitHub Username:  tokiboggle
+Student ID:  s264037 - GitHub Username:  EmilSommerBennetzen2\
+Student ID:  s206178 - GitHub Username:  BerB\
+Student ID:  s261697 - GitHub Username:  mahuizg\
+Student ID:  s261782 - GitHub Username:  mathilde-picard\
+Student ID:  s264038 - GitHub Username:  tokiboggle
 
 ## Packages 
 To reproduce this analysis, you need the following R packages:
