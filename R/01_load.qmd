@@ -6,11 +6,12 @@ editor: visual
 
 #### Import packages
 
-Import the different libraries we will need.
+Import the different libraries we will need as well as our custom function.
 
 ```{r, message=FALSE}
 library("tidyverse")
 library("curl")
+source("99_my_transpose.R")
 ```
 
 #### Load data
@@ -143,22 +144,9 @@ head(proteomes_pam50_joined)
 In order to utilise the clinical data for each patient, such as the RNA PAM50 classification of breast cancer subtypes, in our analysis, we join the proteomic data to the clinical dataset. As the clinical data has patient IDs in a column, we transpose the proteomic data:
 
 ```{r}
-proteomes_dupmean_transposed <- proteomes_dupmean |> 
-  # keep only accession numbers and expression level cols
-  select(RefSeq_accession_number, 
-         ends_with("CPTAC") | starts_with("TCGA")) |>
-  
-  # get one row pr. protein x patient
-  pivot_longer(
-    cols = -RefSeq_accession_number, 
-    names_to = "patient_id",
-    values_to = "log2_ratio") |> 
-  
-  # get one row pr. patient, one col pr. protein
-  pivot_wider(
-    names_from = RefSeq_accession_number,
-    values_from = log2_ratio
-  )
+proteomes_dupmean_transposed <- my_transpose(proteomes_dupmean)
+
+head(proteomes_dupmean_transposed)
 ```
 
 We can now join by the common column 'patient_id', called 'Complete TCGA ID' in the clinical dataset:
@@ -176,33 +164,9 @@ head(final_dataset_all_genes)
 #### PAM50 filtered proteomes merged with clinical data
 
 ```{r}
-proteomes_pam50_transposed <- proteomes_pam50_joined |> 
-  # keep only accession numbers and expression level cols
-  select(RefSeq_accession_number, 
-         ends_with("CPTAC") | starts_with("TCGA")) |> 
-  
-  # get one row pr. protein x patient
-  pivot_longer(
-    cols = -RefSeq_accession_number, 
-    names_to = "patient_id",
-    values_to = "log2_ratio"
-  ) |> 
-  
-  # get one row pr. patient, one col pr. protein
-  pivot_wider(
-    names_from = RefSeq_accession_number,
-    values_from = log2_ratio
-  )
+proteomes_pam50_transposed <- my_transpose(proteomes_pam50_joined)
 
 head(proteomes_pam50_transposed)
-```
-
-Sanity check of columns removed from clinical + proteome join (delete?)
-
-```{r}
-setdiff(names(proteomes_pam50_joined),
-        names(select(proteomes_pam50_joined,
-                     RefSeq_accession_number, ends_with("CPTAC") | starts_with("TCGA"))))
 ```
 
 left_join(), creating NA's in all clinical data columns for Control samples.
