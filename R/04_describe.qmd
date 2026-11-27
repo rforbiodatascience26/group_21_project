@@ -4,6 +4,8 @@ format: html
 editor: visual
 ---
 
+### Description of the final datasets (after cleaning)
+
 ### Load packages
 
 ```{r}
@@ -24,11 +26,44 @@ dat_all <- read_tsv(str_c(data_path,
                           "03_dat_augment_all_genes.tsv"))
 ```
 
+### Overview of the two datasets
 
+Visualization of the two clean datasets we are working with.
+
+```{r}
+head(dat_pam50)
+head(dat_all)
+```
+
+We will keep those two dataset for the analysis. 
+- dat_pam50 = expression of the PAM50 proteins only for all patients and 3 control samples
+- dat_all = expression of the whole proteome for all patients and 3 control samples 
+
+Both dataset have one row per patient and one colomn per protein of interest plus the PAM50
+mRNA subtype at the end (controls are labelled as "control").
+Duplicate samples were merged by their mean and NA values were removed (02_clean.qmd).
+
+### Clinical Characteristics 
+
+
+
+
+
+
+
+For me we should remove the description starting from the raw data to the cleaning step. 
+It should be in the previous files at each step. 
+This file is used to describe the final datasets!
+
+START (from here)
 
 ### Descriptive statistics
 
 *\*\*Most of this should probably be deleted, and just used for the presentation. We should likely restrict this file to just describe the fully cleaned+augmented/analysis ready data.*
+
+For me we should remove the description starting from the raw data to the cleaning step. 
+It should be in the previous files at each step. 
+This file is used to describe the final datasets!
 
 #### The raw data
 
@@ -95,3 +130,6 @@ Filtering proteins for NA's in expression level, XX proteins were discarded. The
 ```{r}
 head()
 ```
+
+STOP (to here)
+
