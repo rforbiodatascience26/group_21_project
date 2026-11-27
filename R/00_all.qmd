@@ -1,4 +1,23 @@
 ---
 title: "00_all"
 format: html
+editor:
+  visual
 ---
+<<<<<<< HEAD
+=======
+
+#### placeholder
+
+Not sure if coding style is what he wants (in terms of regex usage for instance)
+
+```{r, eval: false}
+qmds <- list.files("R", pattern = "^0[1-6]_.*\\.qmd$", full.names = TRUE)
+
+for (f in qmds) quarto::quarto_render(f)
+
+# flatten results/R/*.html into results/
+htmls <- list.files("results/R", pattern = "\\.html$", full.names = TRUE)
+file.rename(htmls, file.path("results", basename(htmls)))
+```
+>>>>>>> f653ccdf4505b779219b4a22dcca7a06a18f7c02
