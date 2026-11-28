@@ -7,7 +7,6 @@ editor: visual
 ```{r}
 library("tidyverse")
 library("broom")
-library("factoextra")
 ```
 
 ## Loading output data from 03_augment
@@ -15,7 +14,6 @@ library("factoextra")
 ```{r}
 # Load datasets into environment
 data_path <- "../data/"
-
 
 pam50_augmented <- read_tsv(str_c(data_path, 
                                   "03_dat_augment_pam50_filtered.tsv"), 
@@ -28,6 +26,8 @@ all_genes_augmented  <- read_tsv(str_c(data_path,
 # Analysis
 
 ## Principal Component Analysis
+
+We begin ensuring that our data is in wide format
 
 ```{r}
 pca_wide <- all_genes_augmented |> 
@@ -43,6 +43,8 @@ pca_res <- pca_wide |>
   select(-patient_id, -subtype) |> 
   prcomp(scale.=TRUE, center=TRUE, retx=TRUE)
 ```
+
+### Captured variance per principal component
 
 The following two chunks of code will help us observe how much variance is captured by each of the PCs. Then, we will also observe the PC loadings for a couple of proteins.
 
@@ -81,6 +83,8 @@ pc2_label <- extract_label(2)
 
 ```
 
+### PCA scatterplot in two dimensions
+
 Now, we are making a scatterplot colored by subtype to help us answer the if tumors belonging to the same subtype share proteins. If the subtypes properly separate, then we could argue that proteins seem to distinguish the subtypes; whereas if they're all scattered, then the proteins aren't enough to do so. Also, the groups that are placed closer to one another will have similar profiles.
 
 ```{r}
@@ -103,13 +107,9 @@ pca_scores |>
   theme_minimal()
 ```
 
-After having observed the scatterplot, we notice that in two dimensions, the patients with basal-like breast cancer separate on the top of the plot. Meanwhile, the rest of the patients sit in a continuum. As a next step, we are graphing the 10 proteins that contribute the most to the first two principal components to observe the direction and the overall contribution of the variables in the PCs.
+### Proteins with gene names that pull basal-like tumors to the top of the plot.
 
-```{r}
-fviz_pca_var(pca_res, select.var = list(contrib=10), repel = TRUE)
-```
-
-With the names we have in the previous plot, it is unclear which protein is which, so now we will see which proteins (with their gene names) have a greater magnitude in principal component 2. We are only focusing on PC2, because it's precisely in that direction where basal-like tumors spread, and we want to figure what is separating that subtype from the other three.
+After having observed the scatterplot, we notice that in two dimensions, the patients with basal-like breast cancer separate on the top of the plot. Meanwhile, the rest of the patients sit in a continuum. Now we will see which proteins (with their gene names) have a greater magnitude in principal component 2. We are only focusing on PC2, because it's precisely in that direction where basal-like tumors spread, and we want to figure what is separating that subtype from the other three.
 
 ```{r}
 gene_names <- read_csv("../data/_raw/77_cancer_proteomes_CPTAC_itraq.csv",
@@ -127,13 +127,13 @@ top_pc2 <- pca_res |>
 top_pc2
 ```
 
-A very interesting remark is that, proteins with large-magnitude PC2 loadings included FOXA1. This is a characteristic transcription factor found in luminal breast cancer, with less presence in basal-like tumors. This is consistent with the separation of basal-like tumors along this axis.
+A very interesting remark is that, proteins with large-magnitude PC2 loadings included FOXA1. This is a characteristic transcription factor found in luminal breast cancer, with less presence in basal-like tumors (Kumar, et al., 2021). This is consistent with the separation of basal-like tumors along this axis.
 
 ## K-means
 
 Now, we will carry out k-means clustering (with and without PAM50) to understand why it makes sense to use PAM50 proteins to distinguish subtypes rather than using the rest of the proteome as well. Right now, we have the PCA scatterplot, but a K-means will help us explore further. Once again, this is based on a GeeksForGeeks tutorial.
 
-Slight preprocessing to split the protein columns (with and without PAM50).
+### Slight preprocessing to split the protein columns (with and without PAM50).
 
 ```{r}
 pam50_ids <- read_csv("../data/_raw/PAM50_proteins.csv",
@@ -172,6 +172,8 @@ pca_kmeans <- pca_scores |>
     )
 ```
 
+### Subtype counts per cluster for the two approaches
+
 ```{r}
 pca_kmeans |> 
   count(subtype, cluster_pam50) |> 
@@ -186,6 +188,8 @@ pca_kmeans |>
               values_fill=0)
 
 ```
+
+### Cluster plots with and without PAM50
 
 ```{r}
 #Clusters from the PAM50 proteins
@@ -217,9 +221,9 @@ pca_kmeans |>
 
 So far, the PAM50 proteins appear to separate basal-like tumors more cleanly than when carrying out k-means without these proteins. The counts reveal that 17 of 18 basal like samples fall in a single cluster versus 13 of 18 without PAM50; however, HER2-enriched and luminal samples are consistently mixed across clusters in both cases. It is important to distinguish that the PAM50 set contains a few protein, whereas the rest of the proteome has thousands, so the difference could be due to set size and not to the PAM50 proteins themselves.
 
-## ARI
+## Purity scores
 
-In this last part of the analysis, we want to quantify how well the clusters match the known subtypes, so we are using the Adjusted Rand Index (ARI). This will allow us to check for every pair of patients if the clusters and the subtypes agree on grouping them (or not), or if this is happening merely by chance. Since the PAM50 set has fewer proteins than the rest of the proteome, we will compare its ARI against 100 random sets of proteins of the same size.
+As a final part of the analysis, we will explore the purity scores for the two approaches we've been working with. The way this works is that, for each cluster, we take the tumor subtype more common and calculate the proportion of patients in said cluster that belongs to its main subtype. Since the PAM50 set has far fewer proteins than the rest of the proteome, we will compare its purity against 100 random sets of proteins of the same size.
 
 ```{r}
 n_pam50 <- ncol(pam50_only)
@@ -228,9 +232,29 @@ subtypes <- pull(pca_wide, subtype)
 n_pam50
 ```
 
+### Definition of the function to calculate purity
+
 ```{r}
-random_ari <- function(n_proteins){
-  chosen <- tibble(protein=names(no_pam50)) |> 
+cluster_purity <- function(subtypes, clusters){
+  counts <- tibble(subtypes, clusters) |> 
+    count(clusters, subtypes)
+  #The following part is to know the amount of patients in total
+  n_total <- counts |> 
+    summarise(s = sum(n)) |> 
+    pull(s)
+  
+  counts |> 
+    slice_max(n, by=clusters, with_ties=FALSE) |> 
+    summarise(purity = sum(n) / n_total) |> #This is the calculation itself!
+    pull(purity)
+}
+```
+
+### Calculating purity for 100 random samples of proteins (no PAM50)
+
+```{r}
+random_purity <- function(n_proteins){
+  chosen <- tibble(protein = names(no_pam50)) |> 
     slice_sample(n=n_proteins) |> 
     pull(protein)
   
@@ -241,36 +265,54 @@ random_ari <- function(n_proteins){
     augment(random_set) |> 
     pull(.cluster)
   
-  adjusted_rand(subtypes, clusters)
+  cluster_purity(subtypes, clusters)
 }
 ```
 
 ```{r}
 set.seed(42)
-random_scores <- tibble(rep = 1:100) |> 
-  #100 different samples equal size to ncol(pam50_only)
-  mutate(ari = map_dbl(rep, \(i) random_ari(n_pam50)))
+random_scores <- tibble(rep = 1:100) |>  #the process is repeated 100 times
+  mutate(purity = map_dbl(rep, \(i) random_purity(n_pam50)))
 ```
 
-```{r}
-ari_pam50 <- adjusted_rand(subtypes, pull(pca_kmeans, cluster_pam50))
+### Purity for clusters with PAM50
 
-random_scores |> 
-  summarise(p_empirical = mean(ari>=ari_pam50))
+```{r}
+purity_pam50 <- cluster_purity(subtypes, pull(pca_kmeans, cluster_pam50)) 
+purity_pam50
 ```
 
+### Empirical p-value
+
+We'll calculate it as the mean of the amount of times our random samples (without PAM50) had a purity higher or equal to that of the clusters in which PAM50 proteins were used.
+
 ```{r}
 random_scores |> 
-  ggplot(aes(x=ari))+
-  geom_histogram(bins=20)+
-  geom_vline(xintercept = ari_pam50, linetype = "dashed") +
-  labs(title = "ARI of random protein sets vs PAM50",
-       x = "ARI",
+  summarise(p_empirical = mean(purity >= purity_pam50 ))
+```
+
+### Histogram plot comparing purity distributions vs. PAM50 purity score
+
+Fianlly, we can create a histogram to see how the purity score of the 100 random set of proteins is distributed in comparison to the PAM50 set purity score!
+
+```{r}
+random_scores |> 
+  ggplot(aes(x=purity))+
+  geom_histogram(bins=20) +
+  geom_vline(xintercept = purity_pam50, linetype = "dashed") +
+  labs(title="Purity of random protein sets vs. PAM50",
+       x = "Purity score", 
        y = "Count") +
   theme_minimal()
 ```
+
+As observed, none of the 100 random sets reached the purity of the PAM50 proteins. This is backed up by an empirical p-value \< 0.01, which suggests that the advantage of the PAM50 proteins is not explaines by the set size alone.
+
+## 
 
 ## References:
 
 - GeeksForGeeks. (2026). *Principal Component Analysis with R Programming.* Retrieved from: <https://www.geeksforgeeks.org/r-language/principal-component-analysis-with-r-programming/>
 - GeeksForGeeks. (2025). *K-Means Clustering in R Programming.* Retrieved from: <https://www.geeksforgeeks.org/r-language/k-means-clustering-in-r-programming/>
+- Kumar, U., Ardasheva, A., Mahmud, Z., et al. (2021). *FOXA1 is a determinant of drug resistance in breast cancer cells.* Breast Cancer Research and Treatment, 186, 317–326. [https://doi.org/10.1007/s10549-020-06068-5 ](https://link.springer.com/article/10.1007/s10549-020-06068-5)
+- Thieu. (2021). *Purity Score (PuS).* Permetrics. Retrieved from: <https://permetrics.readthedocs.io/v2.0.0/pages/clustering/PuS.html>
