@@ -308,7 +308,17 @@ random_scores |>
 
 As observed, none of the 100 random sets reached the purity of the PAM50 proteins. This is backed up by an empirical p-value \< 0.01, which suggests that the advantage of the PAM50 proteins is not explaines by the set size alone.
 
-## 
+## Results
+
+As we observed, basal-like tumors separate from the rest of the subtypes in the PCA. This happens mostly in the second principal component, while HER2-enriched and luminal types form a continuum that overlaps. FOXA1 is among the proteins with the largest magnitude in PC2 with a negative loading opposite to the direction where basal-like observations are spread. This is a luminal marker, so it is consistent with the separation. Other proteins such as LYN, MYO1F and MSN point towards basal-like tumors.
+
+Using k-means (k=4), basal-like is the subtype that was recovered best with 17/18 samples in the same cluster with PAM50 and 13/18 without PAM50. HER2-enriched and the luminal subtypes are mixed in both cases, so the proteome is not able to properly "separate" the 4 subtypes.
+
+Purity is greater with PAM50 than without those proteins (\~0.61). This advantage is not explained only by the set size of the PAM50 subset, as none of the 100 random sets of proteins with equal size reached the purity that PAM50 yielded (p\<0.01).
+
+### Limitations
+
+Of course, this is not a discovery per se, since PAM50 proteins were selected to distinguish these subtypes, but instead works as a confirmation of this design. Separation is moderate and is mainly observed for basal-like tumors. Also, better results could come from having a greater sample of patients.
 
 ## References:
 
